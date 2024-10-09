@@ -1,3 +1,5 @@
+<?php
+
 /**
      * Google Search Console
      */
