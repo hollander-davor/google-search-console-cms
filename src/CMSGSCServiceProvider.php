@@ -23,7 +23,7 @@ class CMSGSCServiceProvider extends ServiceProvider{
         $this->loadMigrationsFrom(__DIR__.'/migrations');
         //load controller---------------------
         $this->publishes([
-            __DIR__.'/Controllers/GoogleSearchConsoleController.php' => app_path('Http/Controllers/'),
+            __DIR__.'/Controllers' => app_path('Http/Controllers/'),
         ], 'controllers');
         //load views---------------------
         $this->publishes([
