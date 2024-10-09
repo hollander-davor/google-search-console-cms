@@ -1,0 +1,29 @@
+{
+    "name": "davor/cms_gsc",
+    "description": "Displays data from Google Search Console on CMS using Google API",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Davor\\CmsGsc\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "davor.holender",
+            "email": "davor.holender@cubes.rs"
+        }
+    ],
+    "require": {
+        "php" : "^7.2",
+        "google/apiclient": "^2.14"
+    },
+    "minimum-stability": "dev",
+    "extra": {
+        "laravel": {
+            "providers":[
+                "Hoks\\CMSGSC\\CMSGSCServiceProvider"
+            ]
+        }
+    }
+}
