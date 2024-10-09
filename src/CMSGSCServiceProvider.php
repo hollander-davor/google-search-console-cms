@@ -13,7 +13,12 @@ class CMSGSCServiceProvider extends ServiceProvider{
             __DIR__.'/config/gsc-cms.php' => config_path('gsc-cms.php')
         ],'config');
         //load routes---------------------
-        $this->loadRoutesFrom(__DIR__.'/routes/web.php');
+        // $this->loadRoutesFrom(__DIR__.'/routes/web.php');
+        // Get the route file path
+        $source = __DIR__.'/routes/web.php';
+        $destination = base_path('routes/web.php');
+        // Append the package routes to the application's routes/web.php
+        file_put_contents($destination, PHP_EOL . file_get_contents($source), FILE_APPEND);
         //load migrations---------------------
         $this->loadMigrationsFrom(__DIR__.'/migrations');
         //load controller---------------------
