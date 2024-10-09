@@ -4,8 +4,10 @@ Installation:
 1. composer require davor/cms-gsc
 2. php artisan vendor:publish --tag=config --provider="Hoks\CMSGSC\CMSGSCServiceProvider"
 3. php artisan vendor:publish --tag=views --provider="Hoks\CMSGSC\CMSGSCServiceProvider"
-4. Put service_account.json to desired location
-5. Set up config/gsc-cms.php
-6. Call command GetGoogleSearchConsoleData according to you needs (for example, once a day at 03:00)
-7. Use package :D
+4. php artisan vendor:publish --tag=controllers --provider="Hoks\CMSGSC\CMSGSCServiceProvider"
+5. Put service_account.json to desired location
+6. Set up config/gsc-cms.php
+7. Call command GetGoogleSearchConsoleData according to you needs (for example, once a day at 03:00)
+8. Make permission to access package pages (gsc-cms)
+9. Use package :D
 
