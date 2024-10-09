@@ -1,5 +1,5 @@
 {
-    "name": "davor/cms_gsc",
+    "name": "davor/cms-gsc",
     "description": "Displays data from Google Search Console on CMS using Google API",
     "type": "library",
     "license": "MIT",
