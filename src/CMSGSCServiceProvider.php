@@ -16,10 +16,6 @@ class CMSGSCServiceProvider extends ServiceProvider{
         $this->loadRoutesFrom(__DIR__.'/routes/web.php');
         //load migrations---------------------
         $this->loadMigrationsFrom(__DIR__.'/migrations');
-        //load controller---------------------
-        $this->publishes([
-            __DIR__.'/Controllers' => app_path('Http/Controllers/'),
-        ], 'controllers');
         //load views---------------------
         $this->publishes([
             __DIR__.'/views/google_search_console' => resource_path('views/google_search_console'),
