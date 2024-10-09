@@ -1,4 +1,3 @@
-<?php
 
 /**
      * Google Search Console
