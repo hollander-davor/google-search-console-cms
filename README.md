@@ -9,5 +9,6 @@ Installation:
 6. Set up config/gsc-cms.php
 7. Call command GetGoogleSearchConsoleData according to you needs (for example, once a day at 03:00)
 8. Make permission to access package pages (gsc-cms)
-9. Use package :D
+9. put require base_path('vendor/davor/cms-gsc/src/routes/web.php'); inside of routes/web.php
+10. Use package :D
 
