@@ -1,6 +1,5 @@
 <?php
 
-Route::middleware(['auth'])->group(function () {
 /**
      * Google Search Console
      */
@@ -11,4 +10,3 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/exclude/{query}', 'GoogleSearchConsoleController@exclude')->name('exclude');
         Route::get('/pages/{query}', 'GoogleSearchConsoleController@pages')->name('pages');
     });
-});
