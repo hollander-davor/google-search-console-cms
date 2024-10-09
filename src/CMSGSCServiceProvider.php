@@ -13,7 +13,7 @@ class CMSGSCServiceProvider extends ServiceProvider{
             __DIR__.'/config/gsc-cms.php' => config_path('gsc-cms.php')
         ],'config');
         //load routes---------------------
-        $this->loadRoutesFrom(__DIR__.'/routes/web.php');
+        // $this->loadRoutesFrom(__DIR__.'/routes/web.php');
         //load migrations---------------------
         $this->loadMigrationsFrom(__DIR__.'/migrations');
         //load views---------------------
@@ -23,7 +23,7 @@ class CMSGSCServiceProvider extends ServiceProvider{
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                GetGoogleSearchConsoleData::class
+                GetGoogleSearchConsoleData::class,
             ]);
         }
 
