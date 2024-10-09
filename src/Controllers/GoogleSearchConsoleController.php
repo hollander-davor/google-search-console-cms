@@ -10,6 +10,8 @@ use Hoks\CMSGSC\Models\SearchConsoleQueryPage;
 use Google\Service\SearchConsole;
 use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Google\Client;
+use App\Http\Controllers\Controller;
+
 class GoogleSearchConsoleController extends Controller
 {
     /**
