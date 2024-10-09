@@ -1,7 +1,7 @@
 <?php
 
 return [
-    //absolute path to google credentials json
+    //absolute path to google credentials json (service_accont.json)
    'google_application_credentials' => env("GOOGLE_APPLICATION_CREDENTIALS",""),
    //websites for which we will take data, each website is array with domain and site_id
    'websites_domains' => [
