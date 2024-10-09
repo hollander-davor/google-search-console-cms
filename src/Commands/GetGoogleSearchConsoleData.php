@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Google\Client;
 use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Google\Service\SearchConsole;
+use Illuminate\Support\Facades\DB;
 
 class GetGoogleSearchConsoleData extends Command
 {
@@ -48,6 +49,10 @@ class GetGoogleSearchConsoleData extends Command
      */
     public function handle()
     {
+        //first we truncate tables search_console_queries and search_console_query_pages
+        DB::table('search_console_queries')->truncate();
+        DB::table('search_console_query_pages')->truncate();
+
         //set queries with status
         $this->setQueriesWithStatuses();
     
