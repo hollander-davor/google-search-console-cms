@@ -51,6 +51,11 @@
             let ItemsDatatable = $('#entities-table').DataTable({
                 "processing": true,
                 "serverSide": true,
+                'createdRow': function( row, data, dataIndex ) {
+                    if(data.critical == 1){
+                        $(row).css('background-color', '{{config('gsc-cms.critical_query_color')}}');
+                    }
+                },
                 "ajax": {
                     url: "@route('google_search_console.datatable')",
                     type: "POST",

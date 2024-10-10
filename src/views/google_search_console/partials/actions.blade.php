@@ -18,5 +18,12 @@
         >
                 <i class="fa fa-external-link"></i>
             </a>
+        @if($entity->critical == 1)
+            <button 
+                disabled 
+                style="margin-left:10px"  
+                type="button" 
+                class="btn btn-danger">{{config('gsc-cms.critical_query_text')}}</button>
+        @endif
 
 </div>

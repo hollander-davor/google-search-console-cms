@@ -103,7 +103,7 @@ class GetGoogleSearchConsoleData extends Command
                         'ctr' => $query->ctr,
                         'position' => $query->position,
                         'status' => $this->checkForQueryStatus($query->keys[0]),
-                        'critical' => 0,
+                        'critical' => $this->checkIfCritical($query),
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
@@ -133,5 +133,24 @@ class GetGoogleSearchConsoleData extends Command
             }
         }
         return $status;
+    }
+
+    /**
+     * determine if query is critical
+     * high number of impressions and low ctr
+     */
+    protected function checkIfCritical($query){
+        $ctrThreshold = config('gsc-cms.low_ctr_value');
+        $impressionsThreshold = config('gsc-cms.high_impressions_value');
+
+        $status = 0;
+        if($query->ctr <= $ctrThreshold){
+            if($query->impressions >= $impressionsThreshold){
+                $status = 1;
+            }
+        }
+
+        return $status;
+
     }
 }
