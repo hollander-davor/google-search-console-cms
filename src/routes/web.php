@@ -10,4 +10,6 @@ use Hoks\CMSGSC\Controllers\GoogleSearchConsoleController;
         Route::post('/pages-datatable', [GoogleSearchConsoleController::class,'pagesDatatable'])->name('pages_datatable');
         Route::post('/exclude/{query}', [GoogleSearchConsoleController::class,'exclude'])->name('exclude');
         Route::get('/pages/{query}', [GoogleSearchConsoleController::class,'pages'])->name('pages');
+        Route::post('/mark-as-fixed/{query}', 'GoogleSearchConsoleController@markAsFixed')->name('mark_as_fixed');
+
     });

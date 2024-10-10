@@ -30,13 +30,13 @@ class GoogleSearchConsoleController extends Controller
         $activeWebsite = request()->activeWebsite;
         if(isset($activeWebsite)){
             $queries = SearchConsoleQuery::where('site_id',$activeWebsite);
-            $existingQueries = SearchConsoleQueryStatuses::where('site_id',$activeWebsite)->get();
-            $excludedQueries = [];
-            foreach($existingQueries as $existingQuery){
-                if($existingQuery->exclude == 1){
-                    $excludedQueries[] = $existingQuery->query;
-                }
-            }
+            // $existingQueries = SearchConsoleQueryStatuses::where('site_id',$activeWebsite)->get();
+            // $excludedQueries = [];
+            // foreach($existingQueries as $existingQuery){
+            //     if($existingQuery->exclude == 1){
+            //         $excludedQueries[] = $existingQuery->query;
+            //     }
+            // }
             $datatable = datatables($queries)->addColumn('actions',function($row){
                 return view('google_search_console.partials.actions',['entity' => $row]);
             })->editColumn('ctr',function($row){
@@ -47,9 +47,9 @@ class GoogleSearchConsoleController extends Controller
 
             $datatable->rawColumns(['actions']);
 
-            $datatable->filter(function()use($queries,$excludedQueries){
-                $queries->whereNotIn('query',$excludedQueries);
-            });
+            // $datatable->filter(function()use($queries,$excludedQueries){
+            //     $queries->whereNotIn('query',$excludedQueries);
+            // });
 
             return $datatable->make();
         }
@@ -69,6 +69,10 @@ class GoogleSearchConsoleController extends Controller
             
             $newQueryWithStatus->fill($data);
             $newQueryWithStatus->save();
+
+            $query->update([
+                'status' => SearchConsoleQuery::STATUS_EXCLUDED
+            ]);
           
             if (request()->wantsJson()) {
                 return JsonResource::make()->withSuccess(__('Query has been successfully excluded!'));
@@ -195,6 +199,34 @@ class GoogleSearchConsoleController extends Controller
           
         }
         
+    }
+
+    /**
+     * mark query as fixed (give some query status EXCLUDED)
+     */
+    public function markAsFixed(SearchConsoleQuery $query){
+        if(isset($query)){
+            $newQueryWithStatus = new SearchConsoleQueryStatuses();
+            $data = [
+                'site_id' => $query->site_id,
+                'query' => $query->query,
+                'fixed' => 1
+            ];
+            
+            $newQueryWithStatus->fill($data);
+            $newQueryWithStatus->save();
+
+            $query->update([
+                'status' => SearchConsoleQuery::STATUS_FIXED
+            ]);
+          
+            if (request()->wantsJson()) {
+                return JsonResource::make()->withSuccess(__('Query has been successfully marked as fixed!'));
+            }
+            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully marked as fixed!'));
+
+        }
+
     }
 
      

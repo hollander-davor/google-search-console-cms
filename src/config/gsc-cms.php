@@ -17,7 +17,15 @@ return [
    //queries with impression values above this value will be in consideration for critical queries(combined with ctr)
     'high_impressions_value' => 500,
     //background color for critical queries (in datatable)
-    'critical_query_color' => '#ffcccb',
+    'critical_query_color' => '#c1e1ec',
     //text to be displayed on "tag" for critical query (in datatable)
-    'critical_query_text' => "Critical query"
+    'critical_query_text' => "Great potential",
+    //background color for excluded queries (in datatable)
+    'excluded_query_color' => "#ffb09c",
+    //text to be displayed on "tag" for excluded query (in datatable)
+    'excluded_query_text' => "Excluded query",
+    //background color for fixed queries (in datatable)
+    'fixed_query_color' => '#d8e6ad',
+    //text to be displayed on "tag" for fixed query (in datatable)
+    'fixed_query_text' => "Fixed query"
 ];

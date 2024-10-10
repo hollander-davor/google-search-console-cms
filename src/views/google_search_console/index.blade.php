@@ -55,6 +55,12 @@
                     if(data.critical == 1){
                         $(row).css('background-color', '{{config('gsc-cms.critical_query_color')}}');
                     }
+                    if(data.status == 1){
+                        $(row).css('background-color', '{{config('gsc-cms.excluded_query_color')}}');
+                    }
+                    if(data.status == 2){
+                        $(row).css('background-color', '{{config('gsc-cms.fixed_query_color')}}');
+                    }
                 },
                 "ajax": {
                     url: "@route('google_search_console.datatable')",
@@ -76,6 +82,13 @@
 
             $('#entities-table').questionPop({
                 "liveSelector": '[data-action="exclude"]'
+            }).on('success.qp', function() {
+                $('#entities-table').DataTable().draw('page');
+
+            });
+
+            $('#entities-table').questionPop({
+                "liveSelector": '[data-action="fixed"]'
             }).on('success.qp', function() {
                 $('#entities-table').DataTable().draw('page');
 
