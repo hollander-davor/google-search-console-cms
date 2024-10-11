@@ -17,7 +17,7 @@ class CreateSearchConsoleQueriesStatuses extends Migration
             $table->id();
             $table->tinyInteger('site_id');
             $table->string('query',255);
-            $table->tinyInteger('exclude')->default(0);
+            $table->tinyInteger('excluded')->default(0);
             $table->tinyInteger('fixed')->default(0);
             $table->timestamps();
         });

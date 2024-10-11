@@ -14,17 +14,10 @@ class SearchConsoleQuery extends Model
         'impressions',
         'ctr',
         'position',
-        'status',
+        'excluded',
+        'fixed',
         'critical',
         'created_at',
         'updated_at'
     ];
-
-    /**
-    * statuses
-    */
-    const STATUS_NEW = 0;
-    const STATUS_EXCLUDED = 1;
-    const STATUS_FIXED = 2;
-
 }

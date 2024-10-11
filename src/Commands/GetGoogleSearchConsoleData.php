@@ -28,13 +28,6 @@ class GetGoogleSearchConsoleData extends Command
     protected $description = 'Get Google Search Console Data for specific project';
 
     /**
-     * statuses
-     */
-    const STATUS_NEW = 0;
-    const STATUS_EXCLUDED = 1;
-    const STATUS_FIXED = 2;
-
-    /**
      * set queries with statuses
      */
     protected function setQueriesWithStatuses(){
@@ -102,7 +95,8 @@ class GetGoogleSearchConsoleData extends Command
                         'impressions' => $query->impressions,
                         'ctr' => $query->ctr,
                         'position' => $query->position,
-                        'status' => $this->checkForQueryStatus($query->keys[0]),
+                        'excluded' => $this->checkForQueryStatus($query->keys[0],'excluded'),
+                        'fixed' => $this->checkForQueryStatus($query->keys[0],'fixed'),
                         'critical' => $this->checkIfCritical($query),
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -116,23 +110,26 @@ class GetGoogleSearchConsoleData extends Command
         
     }
 
-    /**
-     * checks for query status
+     /**
+     * checks for query status flags (if query should have flag excluded or fixed etc.)
      */
-    protected function checkForQueryStatus($query){
+    protected function checkForQueryStatus($query,$status){
         $queriesWithStatuses = $this->queriesWithStatuses;
-        $status = self::STATUS_NEW;
-
+        $finalStatus = 0;
         foreach($queriesWithStatuses as $queryWithStatus){
-            if($query == $queryWithStatus->query){
-                if($queryWithStatus->exclude == 1){
-                    $status = self::STATUS_EXCLUDED;
-                }elseif($queryWithStatus->fixed == 1){
-                    $status = self::STATUS_FIXED;
+            if($queryWithStatus->query == $query){
+                if($status == 'excluded'){
+                    if($queryWithStatus->excluded == 1){
+                        $finalStatus = 1;
+                    }
+                }elseif($status == 'fixed'){
+                    if($queryWithStatus->fixed == 1){
+                        $finalStatus = 1;
+                    }
                 }
             }
         }
-        return $status;
+        return $finalStatus;
     }
 
     /**

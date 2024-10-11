@@ -21,8 +21,9 @@ class CreateSearchConsoleQueriesTable extends Migration
             $table->float('impressions');
             $table->float('ctr');
             $table->float('position');
-            $table->tinyInteger('status')->default(0);
-            $table->tinyInteger('critical');
+            $table->tinyInteger('excluded')->default(0);
+            $table->tinyInteger('fixed')->default(0);
+            $table->tinyInteger('critical')->default(0);
             $table->timestamps();
         });
     }

@@ -1,5 +1,5 @@
 <div class="btn-group col-4 ">
-    @if($entity->status != 1)
+    @if($entity->excluded == 0)
         <button
             type="button"
             class="btn btn-secondary"
@@ -14,7 +14,7 @@
             <i class="fa fa-minus-circle"></i>
         </button>
     @endif
-    @if($entity->status != 2)
+    @if($entity->fixed == 0)
         <button
             type="button"
             class="btn btn-success"
@@ -42,14 +42,14 @@
             type="button" 
             class="btn btn-info">{{config('gsc-cms.critical_query_text')}}</button>
     @endif
-    @if($entity->status == 1)
+    @if($entity->excluded == 1)
         <button 
             disabled 
             style="margin-left:10px"  
             type="button" 
             class="btn btn-danger">{{config('gsc-cms.excluded_query_text')}}</button>
     @endif
-    @if($entity->status == 2)
+    @if($entity->fixed == 1)
         <button 
             disabled 
             style="margin-left:10px"  

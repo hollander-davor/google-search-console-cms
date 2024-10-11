@@ -30,13 +30,6 @@ class GoogleSearchConsoleController extends Controller
         $activeWebsite = request()->activeWebsite;
         if(isset($activeWebsite)){
             $queries = SearchConsoleQuery::where('site_id',$activeWebsite);
-            // $existingQueries = SearchConsoleQueryStatuses::where('site_id',$activeWebsite)->get();
-            // $excludedQueries = [];
-            // foreach($existingQueries as $existingQuery){
-            //     if($existingQuery->exclude == 1){
-            //         $excludedQueries[] = $existingQuery->query;
-            //     }
-            // }
             $datatable = datatables($queries)->addColumn('actions',function($row){
                 return view('google_search_console.partials.actions',['entity' => $row]);
             })->editColumn('ctr',function($row){
@@ -47,9 +40,39 @@ class GoogleSearchConsoleController extends Controller
 
             $datatable->rawColumns(['actions']);
 
-            // $datatable->filter(function()use($queries,$excludedQueries){
-            //     $queries->whereNotIn('query',$excludedQueries);
-            // });
+            $datatable->filter(function()use($queries){
+                //search filter
+                if(request()->has('search') && isset(request()->get('search')['value'])){
+                    $searchString = request()->get('search')['value'];
+                    $queries->where('query','LIKE','%'.$searchString.'%');
+                }
+                //filter by excluded status
+                //if value is 'all', we will show both excluded and not-excluded
+                if(isset(request()->excludedStatus)){
+                    $excludedStatus = request()->excludedStatus;
+                    if($excludedStatus == 'excluded'){
+                        //show only excluded
+                        $queries->where('excluded',1);
+                    }elseif($excludedStatus == 'not-excluded'){
+                        //show those that are not excluded
+                        $queries->where('excluded',0);
+                    }
+                }
+
+                //filter by fixed status
+                //if value is 'all', we will show both fixed and not-fixed
+                if(isset(request()->fixedStatus)){
+                    $fixedStatus = request()->fixedStatus;
+                    if($fixedStatus == 'fixed'){
+                        //show only fixed
+                        $queries->where('fixed',1);
+                    }elseif($fixedStatus == 'not-fixed'){
+                        //show those that are not fixed
+                        $queries->where('fixed',0);
+                    }
+                }
+                
+            });
 
             return $datatable->make();
         }
@@ -64,14 +87,14 @@ class GoogleSearchConsoleController extends Controller
             $data = [
                 'site_id' => $query->site_id,
                 'query' => $query->query,
-                'exclude' => 1
+                'excluded' => 1
             ];
             
             $newQueryWithStatus->fill($data);
             $newQueryWithStatus->save();
 
             $query->update([
-                'status' => SearchConsoleQuery::STATUS_EXCLUDED
+                'excluded' => 1
             ]);
           
             if (request()->wantsJson()) {
@@ -217,7 +240,7 @@ class GoogleSearchConsoleController extends Controller
             $newQueryWithStatus->save();
 
             $query->update([
-                'status' => SearchConsoleQuery::STATUS_FIXED
+                'fixed' => 1
             ]);
           
             if (request()->wantsJson()) {

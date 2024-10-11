@@ -23,6 +23,28 @@
                         <h3 class="card-title">@lang('Google Search Console')</h3>
                     </div>
                 </div>
+                <div class="col-sm-12 pt-3" id="filter-datatable">
+                    <div class="row">
+                        <div class="form-group col-2">
+                            <label class="control-label">@lang('Filter by status EXCLUDED')</label>
+                            <select id="select-excluded-status" class="form-control" name='excluded-status'>
+                                <option value="all">@lang("All")</option>
+                                <option value="excluded">@lang("Excluded")</option>
+                                <option selected value="not-excluded">@lang("Not excluded")</option>
+    
+                            </select>
+                        </div>
+                        <div class="form-group col-2">
+                            <label class="control-label">@lang('Filter by status FIXED')</label>
+                            <select id="select-fixed-status" class="form-control" name='fixed-status'>
+                                <option value="all">@lang("All")</option>
+                                <option value="fixed">@lang("Fixed")</option>
+                                <option selected value="not-fixed">@lang("Not fixed")</option>
+    
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body">
                     <table id="entities-table" class="table table-striped">
                         <thead>
@@ -55,10 +77,10 @@
                     if(data.critical == 1){
                         $(row).css('background-color', '{{config('gsc-cms.critical_query_color')}}');
                     }
-                    if(data.status == 1){
+                    if(data.excluded == 1){
                         $(row).css('background-color', '{{config('gsc-cms.excluded_query_color')}}');
                     }
-                    if(data.status == 2){
+                    if(data.fixed == 1){
                         $(row).css('background-color', '{{config('gsc-cms.fixed_query_color')}}');
                     }
                 },
@@ -68,6 +90,8 @@
                     data: function(dtData){
                         dtData["_token"] = "{{csrf_token()}}";
                         dtData["activeWebsite"] = "{{$activeWebsite}}"
+                        dtData["excludedStatus"] = $('#select-excluded-status').val()
+                        dtData["fixedStatus"] = $('#select-fixed-status').val()
                     }
                 },
                 "columns": [
@@ -84,14 +108,12 @@
                 "liveSelector": '[data-action="exclude"]'
             }).on('success.qp', function() {
                 $('#entities-table').DataTable().draw('page');
-
             });
 
             $('#entities-table').questionPop({
                 "liveSelector": '[data-action="fixed"]'
             }).on('success.qp', function() {
                 $('#entities-table').DataTable().draw('page');
-
             });
         });
     </script>

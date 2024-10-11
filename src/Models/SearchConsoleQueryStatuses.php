@@ -11,7 +11,7 @@ class SearchConsoleQueryStatuses extends Model
     protected $fillable = [
         'site_id',
         'query',
-        'exclude',
+        'excluded',
         'fixed',
         'created_at',
         'updated_at'
