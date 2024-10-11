@@ -43,6 +43,15 @@
     
                             </select>
                         </div>
+                        <div class="form-group col-2">
+                            <label class="control-label">@lang('Filter ')"{{config('gsc-cms.critical_query_text')}}"</label>
+                            <select id="select-critical-status" class="form-control" name='critical-status'>
+                                <option selected value="all">@lang("All")</option>
+                                <option value="true">@lang("True")</option>
+                                <option value="false">@lang("False")</option>
+    
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -92,6 +101,8 @@
                         dtData["activeWebsite"] = "{{$activeWebsite}}"
                         dtData["excludedStatus"] = $('#select-excluded-status').val()
                         dtData["fixedStatus"] = $('#select-fixed-status').val()
+                        dtData["criticalStatus"] = $('#select-critical-status').val()
+
                     }
                 },
                 "columns": [
