@@ -79,28 +79,48 @@ class GoogleSearchConsoleController extends Controller
     }
 
     /**
-     * exclude query (give some query status)
+     * exclude/include query 
      */
-    public function exclude(SearchConsoleQuery $query){
+    public function toggleExclude(SearchConsoleQuery $query){
         if(isset($query)){
-            $newQueryWithStatus = new SearchConsoleQueryStatuses();
-            $data = [
-                'site_id' => $query->site_id,
-                'query' => $query->query,
-                'excluded' => 1
-            ];
-            
-            $newQueryWithStatus->fill($data);
-            $newQueryWithStatus->save();
+            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query',$query->query)->first();
+            if($query->excluded == 1){
+                $newStatus = 0;
+            }elseif($query->excluded == 0){
+                $newStatus = 1;
+            }
+            //if query exists in queries with statuses we update it
+            if(isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)){
+                if($existingQueryWithStatus->excluded == 1 && $existingQueryWithStatus->fixed == 0){
+                    $existingQueryWithStatus->delete();
+                }else{
+                    $existingQueryWithStatus->update(['excluded' => $newStatus]);
+                }
+            }else{
+                $newQueryWithStatus = new SearchConsoleQueryStatuses();
+                $data = [
+                    'site_id' => $query->site_id,
+                    'query' => $query->query,
+                    'excluded' => $newStatus
+                ];
+                $newQueryWithStatus->fill($data);
+                $newQueryWithStatus->save();
+            }
 
             $query->update([
-                'excluded' => 1
+                'excluded' => $newStatus
             ]);
+
+            if($newStatus == 0){
+                $messageIdentifier = "included";
+            }elseif($newStatus == 1){
+                $messageIdentifier = "excluded";
+            }
           
             if (request()->wantsJson()) {
-                return JsonResource::make()->withSuccess(__('Query has been successfully excluded!'));
+                return JsonResource::make()->withSuccess(__('Query has been successfully '.$messageIdentifier.'!'));
             }
-            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully excluded!'));
+            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully '.$messageIdentifier.'!'));
 
         }
     }
@@ -224,29 +244,50 @@ class GoogleSearchConsoleController extends Controller
         
     }
 
-    /**
-     * mark query as fixed (give some query status EXCLUDED)
+   /**
+     * mark query as fixed/unfixed 
      */
-    public function markAsFixed(SearchConsoleQuery $query){
+    public function toggleFixed(SearchConsoleQuery $query){
         if(isset($query)){
-            $newQueryWithStatus = new SearchConsoleQueryStatuses();
-            $data = [
-                'site_id' => $query->site_id,
-                'query' => $query->query,
-                'fixed' => 1
-            ];
-            
-            $newQueryWithStatus->fill($data);
-            $newQueryWithStatus->save();
+            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query',$query->query)->first();
+            if($query->fixed == 1){
+                $newStatus = 0;
+            }elseif($query->fixed == 0){
+                $newStatus = 1;
+            }
+            //if query exists in queries with statuses we update it
+            if(isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)){
+                if($existingQueryWithStatus->fixed == 1 && $existingQueryWithStatus->excluded == 0){
+                    $existingQueryWithStatus->delete();
+                }else{
+                    $existingQueryWithStatus->update(['fixed' => $newStatus]);
+                }
+            }else{
+                $newQueryWithStatus = new SearchConsoleQueryStatuses();
+                $data = [
+                    'site_id' => $query->site_id,
+                    'query' => $query->query,
+                    'fixed' => $newStatus
+                ];
+                $newQueryWithStatus->fill($data);
+                $newQueryWithStatus->save();
+            }
 
             $query->update([
-                'fixed' => 1
+                'fixed' => $newStatus
             ]);
+
+            if($newStatus == 0){
+                $messageIdentifier = "fixed";
+            }elseif($newStatus == 1){
+                $messageIdentifier = "unfixed";
+            }
+
           
             if (request()->wantsJson()) {
-                return JsonResource::make()->withSuccess(__('Query has been successfully marked as fixed!'));
+                return JsonResource::make()->withSuccess(__('Query has been successfully marked as '.$messageIdentifier.'!'));
             }
-            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully marked as fixed!'));
+            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully marked as '.$messageIdentifier.'!'));
 
         }
 
