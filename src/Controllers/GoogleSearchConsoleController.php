@@ -11,14 +11,17 @@ use Google\Service\SearchConsole;
 use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Google\Client;
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class GoogleSearchConsoleController extends Controller
 {
     /**
      * displays index page
      */
-    public function index($activeWebsite = false){
-        return view('google_search_console.index',[
+    public function index($activeWebsite = false)
+    {
+        return view('google_search_console.index', [
             'activeWebsite' => $activeWebsite
         ]);
     }
@@ -26,52 +29,132 @@ class GoogleSearchConsoleController extends Controller
     /**
      * datatable
      */
-    public function datatable(){
+    public function datatable()
+    {
         $activeWebsite = request()->activeWebsite;
-        if(isset($activeWebsite)){
-            $queries = SearchConsoleQuery::where('site_id',$activeWebsite);
-            $datatable = datatables($queries)->addColumn('actions',function($row){
-                return view('google_search_console.partials.actions',['entity' => $row]);
-            })->editColumn('ctr',function($row){
-                return $row->ctr." (".($row->ctr*100)."%)";
-            })->editColumn('position',function($row){
-                return round($row->position,2);
+        if (isset($activeWebsite)) {
+            $queries = SearchConsoleQuery::with('queryStatus')->where('site_id', $activeWebsite);
+
+            $datatable = datatables($queries)->addColumn('actions', function ($row) {
+                return view('google_search_console.partials.actions', ['entity' => $row->queryStatus, 'critical' => $row->critical, 'lhf' => $row->low_hanging_fruit, 'query' => $row]);
+            })->editColumn('ctr', function ($row) {
+                return $row->ctr . " (" . ($row->ctr * 100) . "%)";
+            })->editColumn('position', function ($row) {
+                return round($row->position, 2);
+            })->editColumn('answer', function ($row) {
+                return $row->queryStatus->slave_comment ?? '';
+            })
+            ->editColumn('query_statuses', function ($row) {
+                if(!empty($row->queryStatus->slave_status)) {
+                    switch ($row->queryStatus->slave_status) {
+                        case SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED:
+                            return config('gsc-cms.delivered_status');
+                            break;
+                        case SearchConsoleQueryStatuses::SLAVE_STATUS_SEEN:
+                            return config('gsc-cms.seen_status');
+                            break;
+                        case SearchConsoleQueryStatuses::SLAVE_STATUS_DONE:
+                            return config('gsc-cms.done_status');
+                            break;
+                        case SearchConsoleQueryStatuses::SLAVE_STATUS_DELAYED:
+                            return config('gsc-cms.delayed_status');
+                            break;
+                        case SearchConsoleQueryStatuses::SLAVE_STATUS_IN_PROGRESS:
+                            return config('gsc-cms.in_progress_status');
+                            break;
+                        default:
+                            return '';
+                            break;
+                    }
+                }
             });
 
             $datatable->rawColumns(['actions']);
 
-            $datatable->filter(function()use($queries){
+            $datatable->filter(function () use ($queries) {
                 //search filter
-                if(request()->has('search') && isset(request()->get('search')['value'])){
+                if (request()->has('search') && isset(request()->get('search')['value'])) {
                     $searchString = request()->get('search')['value'];
-                    $queries->where('query','LIKE','%'.$searchString.'%');
+                    $queries->where('query', 'LIKE', '%' . $searchString . '%');
                 }
+
+                //filter by critical status
+                //if value is 'all', we will show both true and false
+                if (isset(request()->criticalStatus)) {
+                    $criticalStatus = request()->criticalStatus;
+                    if ($criticalStatus == 'true') {
+                        //show only critical
+                        $queries->where('critical', 1);
+                    } elseif ($criticalStatus == 'false') {
+                        //show those that are not critical
+                        $queries->where('critical', 0);
+                    }
+                }
+
+                //filter by lhf status
+                //if value is 'all', we will show both true and false
+                if (isset(request()->lhfStatus)) {
+                    $lhfStatus = request()->lhfStatus;
+                    if ($lhfStatus == 'true') {
+                        //show only critical
+                        $queries->where('low_hanging_fruit', 1);
+                    } elseif ($lhfStatus == 'false') {
+                        //show those that are not low hanging fruit
+                        $queries->where('low_hanging_fruit', 0);
+                    }
+                }
+
                 //filter by excluded status
                 //if value is 'all', we will show both excluded and not-excluded
-                if(isset(request()->excludedStatus)){
+                if (isset(request()->excludedStatus)) {
                     $excludedStatus = request()->excludedStatus;
-                    if($excludedStatus == 'excluded'){
+                    if ($excludedStatus == 'excluded') {
                         //show only excluded
-                        $queries->where('excluded',1);
-                    }elseif($excludedStatus == 'not-excluded'){
+                        $queries->whereHas('queryStatus', function ($query) {
+                            $query->where('excluded', 1);
+                        });
+                    } elseif ($excludedStatus == 'not-excluded') {
                         //show those that are not excluded
-                        $queries->where('excluded',0);
+                        $excludedQueries = SearchConsoleQuery::whereHas('queryStatus', function ($query) {
+                            $query->where('excluded', 1);
+                        })->pluck('id');
+                        $queries->whereNotIn('id', $excludedQueries);
                     }
                 }
 
                 //filter by fixed status
                 //if value is 'all', we will show both fixed and not-fixed
-                if(isset(request()->fixedStatus)){
+                if (isset(request()->fixedStatus)) {
                     $fixedStatus = request()->fixedStatus;
-                    if($fixedStatus == 'fixed'){
+                    if ($fixedStatus == 'fixed') {
                         //show only fixed
-                        $queries->where('fixed',1);
-                    }elseif($fixedStatus == 'not-fixed'){
+                        $queries->whereHas('queryStatus', function ($query) {
+                            $query->where('fixed', 1);
+                        });
+                    } elseif ($fixedStatus == 'not-fixed') {
                         //show those that are not fixed
-                        $queries->where('fixed',0);
+                        $fixedQueries = SearchConsoleQuery::whereHas('queryStatus', function ($query) {
+                            $query->where('fixed', 1);
+                        })->pluck('id');
+                        $queries->whereNotIn('id', $fixedQueries);
                     }
                 }
-                
+
+                if (isset(request()->delegatedStatus)) {
+                    $delegatedStatus = request()->delegatedStatus;
+                    if ($delegatedStatus == 'delegated') {
+                        //show only delegated
+                        $queries->whereHas('queryStatus', function ($query) {
+                            $query->where('delegated', 1);
+                        });
+                    } elseif ($delegatedStatus == 'not-delegated') {
+                        //show those that are not delegated
+                        $delegatedQueries = SearchConsoleQuery::whereHas('queryStatus', function ($query) {
+                            $query->where('delegated', 1);
+                        })->pluck('id');
+                        $queries->whereNotIn('id', $delegatedQueries);
+                    }
+                }
             });
 
             return $datatable->make();
@@ -81,60 +164,169 @@ class GoogleSearchConsoleController extends Controller
     /**
      * exclude/include query 
      */
-    public function toggleExclude(SearchConsoleQuery $query){
-        if(isset($query)){
-            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query',$query->query)->first();
-            if($query->excluded == 1){
+    public function toggleExclude(SearchConsoleQuery $query)
+    {
+        if (isset($query)) {
+            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query', $query->query)->first();
+            if ($existingQueryWithStatus->excluded == 1) {
                 $newStatus = 0;
-            }elseif($query->excluded == 0){
+            } elseif ($existingQueryWithStatus->excluded == 0) {
                 $newStatus = 1;
             }
             //if query exists in queries with statuses we update it
-            if(isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)){
-                if($existingQueryWithStatus->excluded == 1 && $existingQueryWithStatus->fixed == 0){
-                    $existingQueryWithStatus->delete();
-                }else{
+            if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
+                if ($existingQueryWithStatus->excluded == 1 && $existingQueryWithStatus->fixed == 0 && $existingQueryWithStatus->delegated == 0) {
+                    // $existingQueryWithStatus->delete();
+                    $query->update([
+                        'query_status_id' => 0
+                    ]);
+                } else {
                     $existingQueryWithStatus->update(['excluded' => $newStatus]);
                 }
-            }else{
+            } else {
                 $newQueryWithStatus = new SearchConsoleQueryStatuses();
                 $data = [
-                    'site_id' => $query->site_id,
-                    'query' => $query->query,
+                    'site_id' => $newQueryWithStatus->site_id,
+                    'query' => $newQueryWithStatus->query,
                     'excluded' => $newStatus
                 ];
                 $newQueryWithStatus->fill($data);
                 $newQueryWithStatus->save();
             }
 
-            $query->update([
-                'excluded' => $newStatus
-            ]);
+            // $query->update([
+            //     'excluded' => $newStatus
+            // ]);
 
-            if($newStatus == 0){
+            if ($newStatus == 0) {
                 $messageIdentifier = "included";
-            }elseif($newStatus == 1){
+            } elseif ($newStatus == 1) {
                 $messageIdentifier = "excluded";
             }
-          
-            if (request()->wantsJson()) {
-                return JsonResource::make()->withSuccess(__('Query has been successfully '.$messageIdentifier.'!'));
-            }
-            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully '.$messageIdentifier.'!'));
 
+            if (request()->wantsJson()) {
+                return JsonResource::make()->withSuccess(__('Query has been successfully ' . $messageIdentifier . '!'));
+            }
+            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully ' . $messageIdentifier . '!'));
+        }
+    }
+
+    /**
+     * mark query as fixed/unfixed 
+     */
+    public function toggleFixed(SearchConsoleQuery $query)
+    {
+        if (isset($query)) {
+            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query', $query->query)->first();
+            if ($existingQueryWithStatus->fixed == 1) {
+                $newStatus = 0;
+            } elseif ($existingQueryWithStatus->fixed == 0) {
+                $newStatus = 1;
+            }
+            //if query exists in queries with statuses we update it
+            if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
+
+                if ($existingQueryWithStatus->fixed == 1 && $existingQueryWithStatus->excluded == 0 && $existingQueryWithStatus->delegated == 0) {
+                    // $existingQueryWithStatus->delete();
+                    $query->update([
+                        'query_status_id' => 0
+                    ]);
+                } else {
+                    $existingQueryWithStatus->update(['fixed' => $newStatus]);
+                    $existingQueryWithStatus->update(['delegated' => 0]);
+                }
+            } else {
+                $newQueryWithStatus = new SearchConsoleQueryStatuses();
+                $data = [
+                    'site_id' => $newQueryWithStatus->site_id,
+                    'query' => $newQueryWithStatus->query,
+                    'fixed' => $newStatus
+                ];
+                $newQueryWithStatus->fill($data);
+                $newQueryWithStatus->save();
+            }
+
+            // $query->update([
+            //     'fixed' => $newStatus
+            // ]);
+
+            if ($newStatus == 0) {
+                $messageIdentifier = "fixed";
+            } elseif ($newStatus == 1) {
+                $messageIdentifier = "unfixed";
+            }
+
+
+            if (request()->wantsJson()) {
+                return JsonResource::make()->withSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
+            }
+            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
+        }
+    }
+
+    /**
+     * mark query as delegated/undelegated 
+     */
+    public function toggleDelegated(SearchConsoleQuery $query)
+    {
+        if (isset($query)) {
+            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query', $query->query)->first();
+            if ($existingQueryWithStatus->delegated == 1) {
+                $newStatus = 0;
+            } elseif ($existingQueryWithStatus->delegated == 0) {
+                $newStatus = 1;
+            }
+            //if query exists in queries with statuses we update it
+            if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
+
+                if ($existingQueryWithStatus->delegated == 1 && $existingQueryWithStatus->excluded == 0 && $existingQueryWithStatus->fixed == 0) {
+                    // $existingQueryWithStatus->delete();
+                    $query->update([
+                        'query_status_id' => 0
+                    ]);
+                } else {
+                    $existingQueryWithStatus->update(['delegated' => $newStatus]);
+                }
+            } else {
+                $newQueryWithStatus = new SearchConsoleQueryStatuses();
+                $data = [
+                    'site_id' => $newQueryWithStatus->site_id,
+                    'query' => $newQueryWithStatus->query,
+                    'delegated' => $newStatus
+                ];
+                $newQueryWithStatus->fill($data);
+                $newQueryWithStatus->save();
+            }
+
+            // $query->update([
+            //     'delegated' => $newStatus
+            // ]);
+
+            if ($newStatus == 0) {
+                $messageIdentifier = "delegated";
+            } elseif ($newStatus == 1) {
+                $messageIdentifier = "dismiss";
+            }
+
+
+            if (request()->wantsJson()) {
+                return JsonResource::make()->withSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
+            }
+            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
         }
     }
 
     /**
      * display all pages for one query
      */
-    public function pages(SearchConsoleQuery $query){
+    public function pages(SearchConsoleQuery $query)
+    {
         //get all existing pages for query
-        $queryPages = SearchConsoleQueryPage::where('query_id',$query->id)->get();
-        if(isset($queryPages) && !empty($queryPages) && count($queryPages) > 0){
+        $queryPages = SearchConsoleQueryPage::where('query_id', $query->id)->get();
+        if (isset($queryPages) && !empty($queryPages) && count($queryPages) > 0) {
             //if there are already pages for query, we will return query
-            
-        }else{
+
+        } else {
             //if there are no pages for query, we get them and then return query
 
             $queryTitle = $query->query;
@@ -151,30 +343,30 @@ class GoogleSearchConsoleController extends Controller
             $request->setEndDate($dateTo);
             //we want pages for specific query
             $request->setDimensions(['page']);
-                $request->setDimensionFilterGroups([
-                    [
-                        'filters' => [
-                            [
-                                'dimension' => 'query',
-                                'operator' => 'equals',
-                                'expression' => $queryTitle,
-                            ]
+            $request->setDimensionFilterGroups([
+                [
+                    'filters' => [
+                        [
+                            'dimension' => 'query',
+                            'operator' => 'equals',
+                            'expression' => $queryTitle,
                         ]
                     ]
-                ]);
+                ]
+            ]);
             //find domain for gsc api request
             $websites = config('gsc-cms.websites_domains');
             $domain = false;
-            foreach($websites as $website){
-                if($website['site_id'] == $query->site_id){
+            foreach ($websites as $website) {
+                if ($website['site_id'] == $query->site_id) {
                     $domain = $website['domain'];
-                }            
+                }
             }
 
-            if($domain){
+            if ($domain) {
                 $response = $searchConsole->searchanalytics->query($domain, $request);
-                if($response){
-                    foreach($response as $page){
+                if ($response) {
+                    foreach ($response as $page) {
                         $newPage = new SearchConsoleQueryPage();
                         $data = [
                             'query_id' => $query->id,
@@ -193,12 +385,11 @@ class GoogleSearchConsoleController extends Controller
             }
         }
 
-        return view('google_search_console.pages',['query' => $query]);
-
-
+        return view('google_search_console.pages', ['query' => $query]);
     }
 
-    protected function createClient(){
+    protected function createClient()
+    {
         //instantiate google client
         $client = new Client();
         //set the path to Oauth credentials
@@ -212,8 +403,8 @@ class GoogleSearchConsoleController extends Controller
             $client->fetchAccessTokenWithAssertion();
         }
         //----use this part of code to test connection and see available sites
-            // $sites = $searchConsole->sites->listSites();
-            // dd($sites);
+        // $sites = $searchConsole->sites->listSites();
+        // dd($sites);
         ///-------------------------------------------------------------------
 
         //form the request
@@ -224,74 +415,180 @@ class GoogleSearchConsoleController extends Controller
     /**
      * datatable for pages for specific query
      */
-    public function pagesDatatable(){
+    public function pagesDatatable()
+    {
         $queryId = request()->query_id;
-        if(isset($queryId) && !empty($queryId)){
-            $queryExists = SearchConsoleQuery::where('id',$queryId)->first();
-            if(isset($queryExists) && !empty($queryExists)){
-                $pages = SearchConsoleQueryPage::where('query_id',$queryId);
-        
-                $datatable = datatables($pages)->editColumn('ctr',function($row){
-                    return $row->ctr." (".($row->ctr*100)."%)";
-                })->editColumn('position',function($row){
-                    return round($row->position,2);
+        if (isset($queryId) && !empty($queryId)) {
+            $queryExists = SearchConsoleQuery::where('id', $queryId)->first();
+            if (isset($queryExists) && !empty($queryExists)) {
+                $pages = SearchConsoleQueryPage::where('query_id', $queryId);
+
+                $datatable = datatables($pages)->editColumn('ctr', function ($row) {
+                    return $row->ctr . " (" . ($row->ctr * 100) . "%)";
+                })->editColumn('position', function ($row) {
+                    return round($row->position, 2);
                 });
-        
+
                 return $datatable->make();
             }
-          
         }
-        
     }
 
-   /**
-     * mark query as fixed/unfixed 
-     */
-    public function toggleFixed(SearchConsoleQuery $query){
-        if(isset($query)){
-            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query',$query->query)->first();
-            if($query->fixed == 1){
-                $newStatus = 0;
-            }elseif($query->fixed == 0){
-                $newStatus = 1;
-            }
-            //if query exists in queries with statuses we update it
-            if(isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)){
-                if($existingQueryWithStatus->fixed == 1 && $existingQueryWithStatus->excluded == 0){
-                    $existingQueryWithStatus->delete();
-                }else{
-                    $existingQueryWithStatus->update(['fixed' => $newStatus]);
-                }
-            }else{
-                $newQueryWithStatus = new SearchConsoleQueryStatuses();
-                $data = [
-                    'site_id' => $query->site_id,
-                    'query' => $query->query,
-                    'fixed' => $newStatus
-                ];
-                $newQueryWithStatus->fill($data);
-                $newQueryWithStatus->save();
-            }
+    //new status button
+    public function newStatus($status, SearchConsoleQuery $query)
+    {
+        if (isset($query)) {
+            $queryStatus = new SearchConsoleQueryStatuses();
+            switch ($status) {
+                case 'excluded':
+                    $data = [
+                        'site_id' => $query->site_id,
+                        'query' => $query->query,
+                        'excluded' => 1,
+                        'fixed' => 0,
+                        'delegated' => 0,
+                        'slave_status' => 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    $queryStatus->fill($data);
+                    $queryStatus->save();
+                    $query->update([
+                        'query_status_id' => $queryStatus->id
+                    ]);
 
-            $query->update([
-                'fixed' => $newStatus
+                    $messageIdentifier = "excluded";
+
+                    if (request()->wantsJson()) {
+                        return JsonResource::make()->withSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
+                    }
+                    return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
+                    break;
+
+                case 'fixed':
+                    $data = [
+                        'site_id' => $query->site_id,
+                        'query' => $query->query,
+                        'excluded' => 0,
+                        'fixed' => 1,
+                        'delegated' => 0,
+                        'slave_status' => 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    $queryStatus->fill($data);
+                    $queryStatus->save();
+                    $query->update([
+                        'query_status_id' => $queryStatus->id
+                    ]);
+                    $messageIdentifier = "fixed";
+
+                    if (request()->wantsJson()) {
+                        return JsonResource::make()->withSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
+                    }
+                    return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
+                    break;
+                case 'delegated':
+                    $data = [
+                        'site_id' => $query->site_id,
+                        'query' => $query->query,
+                        'excluded' => 0,
+                        'fixed' => 0,
+                        'delegated' => 1,
+                        'slave_status' => 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    $queryStatus->fill($data);
+                    $queryStatus->save();
+                    $query->update([
+                        'query_status_id' => $queryStatus->id
+                    ]);
+                    $messageIdentifier = "delegated";
+
+                    if (request()->wantsJson()) {
+                        return JsonResource::make()->withSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
+                    }
+                    return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully marked as ' . $messageIdentifier . '!'));
+                    break;
+            }
+        }
+    }
+
+    //get all active users for delegate modal
+    public function getUsers()
+    {
+        $master_id = Auth::user()->id;
+        $users = User::where('id', '!=', $master_id)->where('active', 1)->get();
+        return response()->json(['users' => $users]);
+    }
+
+    //store delegated comment from master
+    public function storeDelegate(Request $request)
+    {
+
+        $data = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'comment' => 'nullable|string',
+            'query_id' => 'required|exists:search_console_queries,id',
+        ]);
+
+        $slave = User::where('id', $data['user_id'])->first();
+        if (isset($slave)) {
+            $user = $slave->first_name . ' ' . $slave->last_name;
+        } else {
+            $user = '';
+        }
+
+        $master_id = Auth::user()->id;
+        $searchConsole = SearchConsoleQuery::where('id', $data['query_id'])->first();
+        $query = $searchConsole->query;
+        $siteId = $searchConsole->site_id;
+        $excludedStatus = $searchConsole->queryStatus->excluded ?? 0;
+        $fixedStatus = $searchConsole->queryStatus->fixed ?? 0;
+
+        $queryStatusExists = SearchConsoleQueryStatuses::where('query', $query)->first();
+        // dd($data, $queryStatusExists);
+        if(!isset($queryStatusExists) && empty($queryStatusExists)) {
+            $queryStatus = SearchConsoleQueryStatuses::insert([
+                'query' => $query,
+                'site_id' => $siteId,
+                'master_id' => $master_id,
+                'slave_id' => $data['user_id'],
+                'master_comment' => $data['comment'],
+                'excluded' => $excludedStatus,
+                'fixed' => $fixedStatus,
+                'delegated' => 1,
+                'slave_status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
-            if($newStatus == 0){
-                $messageIdentifier = "fixed";
-            }elseif($newStatus == 1){
-                $messageIdentifier = "unfixed";
+            if ($queryStatus) {
+                $queryStatusId = SearchConsoleQueryStatuses::where('query', $query)->first();
+                $searchConsole->update([
+                    'query_status_id' => $queryStatusId->id
+                ]);
             }
-
-          
-            if (request()->wantsJson()) {
-                return JsonResource::make()->withSuccess(__('Query has been successfully marked as '.$messageIdentifier.'!'));
-            }
-            return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully marked as '.$messageIdentifier.'!'));
-
+        }else {
+            $queryStatusExists->update([
+                'query' => $query,
+                'site_id' => $siteId,
+                'master_id' => $master_id,
+                'slave_id' => $data['user_id'],
+                'master_comment' => $data['comment'],
+                'excluded' => $excludedStatus,
+                'fixed' => $fixedStatus,
+                'delegated' => 1,
+                'slave_status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
-
+        
+        if (request()->wantsJson()) {
+            return JsonResource::make()->withSuccess(__('Query has been successfully delegated to user ' . $user . '!'));
+        }
+        return redirect()->route('google_search_console.index')->withSystemSuccess(__('Query has been successfully delegated to user ' . $user . '!'));
     }
-
-     
 }

@@ -90,14 +90,16 @@ class GetGoogleSearchConsoleData extends Command
                     $newQuery = new SearchConsoleQuery();
                     $data = [
                         'site_id' => $website['site_id'],
+                        'query_status_id' => $this->checkForQueryStatus($query->keys[0]),
                         'query' => $query->keys[0],
                         'clicks' => $query->clicks,
                         'impressions' => $query->impressions,
                         'ctr' => $query->ctr,
                         'position' => $query->position,
-                        'excluded' => $this->checkForQueryStatus($query->keys[0],'excluded'),
-                        'fixed' => $this->checkForQueryStatus($query->keys[0],'fixed'),
+                        // 'excluded' => $this->checkForQueryStatus($query->keys[0],'excluded'),
+                        // 'fixed' => $this->checkForQueryStatus($query->keys[0],'fixed'),
                         'critical' => $this->checkIfCritical($query),
+                        'low_hanging_fruit' => $this->checkIfLHF($query),
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
@@ -113,23 +115,24 @@ class GetGoogleSearchConsoleData extends Command
      /**
      * checks for query status flags (if query should have flag excluded or fixed etc.)
      */
-    protected function checkForQueryStatus($query,$status){
+    protected function checkForQueryStatus($query){
         $queriesWithStatuses = $this->queriesWithStatuses;
-        $finalStatus = 0;
+        // $finalStatus = 0;
         foreach($queriesWithStatuses as $queryWithStatus){
             if($queryWithStatus->query == $query){
-                if($status == 'excluded'){
-                    if($queryWithStatus->excluded == 1){
-                        $finalStatus = 1;
-                    }
-                }elseif($status == 'fixed'){
-                    if($queryWithStatus->fixed == 1){
-                        $finalStatus = 1;
-                    }
-                }
+                // if($status == 'excluded'){
+                //     if($queryWithStatus->excluded == 1){
+                //         $finalStatus = 1;
+                //     }
+                // }elseif($status == 'fixed'){
+                //     if($queryWithStatus->fixed == 1){
+                //         $finalStatus = 1;
+                //     }
+                // }
+                return $queryWithStatus->id;
             }
         }
-        return $finalStatus;
+        return 0;
     }
 
     /**
@@ -143,6 +146,25 @@ class GetGoogleSearchConsoleData extends Command
         $status = 0;
         if($query->ctr <= $ctrThreshold){
             if($query->impressions >= $impressionsThreshold){
+                $status = 1;
+            }
+        }
+
+        return $status;
+
+    }
+
+    /**
+     * determine if query is low hanging fruit
+     * 
+     */
+    protected function checkIfLHF($query){
+        $lowThreshold = config('gsc-cms.low_lhf_value');
+        $highThreshold = config('gsc-cms.high_lhf_value');
+
+        $status = 0;
+        if($query->position >= $lowThreshold){
+            if($query->position <= $highThreshold){
                 $status = 1;
             }
         }

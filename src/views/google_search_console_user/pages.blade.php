@@ -11,7 +11,7 @@
     @include('_layout.partials.breadcrumbs', [
         'pageTitle' => __('Google Search Console'),
         'websitePicker' => 0,
-        'routeName' => 'google_search_console.index',
+        'routeName' => 'google_search_console_user.index',
     ])
     <div class="row">
         <div class="col-lg-12">
@@ -48,7 +48,7 @@
                 "processing": true,
                 "serverSide": true,
                 "ajax": {
-                    url: "@route('google_search_console.pages_datatable')",
+                    url: "@route('google_search_console_user.pages_datatable')",
                     type: "POST",
                     data: function(dtData) {
                         dtData["_token"] = "{{ csrf_token() }}";

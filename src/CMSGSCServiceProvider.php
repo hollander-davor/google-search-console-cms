@@ -20,6 +20,9 @@ class CMSGSCServiceProvider extends ServiceProvider{
         $this->publishes([
             __DIR__.'/views/google_search_console' => resource_path('views/google_search_console'),
         ], 'views');
+        $this->publishes([
+            __DIR__.'/views/google_search_console_user' => resource_path('views/google_search_console_user'),
+        ], 'views');
 
         if ($this->app->runningInConsole()) {
             $this->commands([
