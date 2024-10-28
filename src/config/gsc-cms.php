@@ -10,6 +10,22 @@ return [
             'site_id' => 1
         ]
     ],
+    //breadcrumbs
+    'websites' => [
+        [
+            'id' => 1,
+            'short_title' => 'Story'
+        ],
+        [
+            'id' => 3,
+            'short_title' => 'Hellomagazin'
+        ],
+        [
+            'id' => 4,
+            'short_title' => 'Gloria'
+        ],
+
+    ],
     //how many days should data be old (default is 7 days, it means that we will get data for last 7 days)
     'days_before_now' => 7,
     //queries with ctr values bellow this value will be in consideration for critical queries(combined with number of impressions)
