@@ -1,9 +1,14 @@
+<style>
+    .modal .modal-dialog .modal-content .modal-header {
+        background-color: unset !important;
+    }
+</style>
 <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="commentModalLabel">@lang('Send a comment')</h5>
+                    <h5 class="modal-title" id="commentModalLabel" style="color: #313a46 !important;">@lang('Send a comment')</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>

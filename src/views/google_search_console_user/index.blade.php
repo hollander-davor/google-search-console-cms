@@ -24,43 +24,6 @@
                     </div>
                     <div class="col-sm-12 pt-3" id="filter-datatable">
                         <div class="row">
-                            {{-- <div class="form-group col-2">
-                                <label class="control-label">@lang('Filter by status EXCLUDED')</label>
-                                <select id="select-excluded-status" class="form-control" name='excluded-status'>
-                                    <option selected value="all">@lang('All')</option>
-                                    <option value="excluded">@lang('Excluded')</option>
-                                    <option value="not-excluded">@lang('Not excluded')</option>
-
-                                </select>
-                            </div>
-                            <div class="form-group col-2">
-                                <label class="control-label">@lang('Filter by status FIXED')</label>
-                                <select id="select-fixed-status" class="form-control" name='fixed-status'>
-                                    <option selected value="all">@lang('All')</option>
-                                    <option value="fixed">@lang('Fixed')</option>
-                                    <option value="not-fixed">@lang('Not fixed')</option>
-
-                                </select>
-                            </div>
-                            <div class="form-group col-2">
-                                <label
-                                    class="control-label">@lang('Filter ')"{{ config('gsc-cms.critical_query_text') }}"</label>
-                                <select id="select-critical-status" class="form-control" name='critical-status'>
-                                    <option selected value="all">@lang('All')</option>
-                                    <option value="true">@lang('True')</option>
-                                    <option value="false">@lang('False')</option>
-
-                                </select>
-                            </div>
-                            <div class="form-group col-2">
-                                <label class="control-label">@lang('Filter by status DELEGATED')</label>
-                                <select id="select-delegated-status" class="form-control" name='delegated-status'>
-                                    <option selected value="all">@lang('All')</option>
-                                    <option value="delegated">@lang('Delegated')</option>
-                                    <option value="not-delegated">@lang('Not delegated')</option>
-
-                                </select>
-                            </div> --}}
                             <div class="form-group col-2">
                                 <label class="control-label">@lang('Filter by status')</label>
                                 <select id="select-status" class="form-control" name='status'>
@@ -81,6 +44,7 @@
                                     <th>@lang('Impressions')</th>
                                     <th>@lang('CTR')</th>
                                     <th>@lang('Position')</th>
+                                    <th>@lang('Delegated by')</th>
                                     <th>@lang('Comment')</th>
                                     <th>@lang('Actions')</th>
                                 </tr>
@@ -102,24 +66,6 @@
             let ItemsDatatable = $('#entities-table').DataTable({
                 "processing": true,
                 "serverSide": true,
-                // 'createdRow': function(row, data, dataIndex) {
-                //     if (data.critical == 1) {
-                //         $(row).css('background-color', '{{ config('gsc-cms.critical_query_color') }}');
-                //     }
-                //     if (data.query_status != null) {
-                //         if (data.query_status.excluded == 1) {
-                //             $(row).css('background-color',
-                //                 '{{ config('gsc-cms.excluded_query_color') }}');
-                //         }
-                //         if (data.query_status.fixed == 1) {
-                //             $(row).css('background-color', '{{ config('gsc-cms.fixed_query_color') }}');
-                //         }
-                //         if (data.query_status.delegated == 1) {
-                //             $(row).css('background-color',
-                //                 '{{ config('gsc-cms.delegated_query_color') }}');
-                //         }
-                //     }
-                // },
                 "ajax": {
                     url: "@route('google_search_console_user.datatable')",
                     type: "POST",
@@ -127,9 +73,6 @@
                         dtData["_token"] = "{{ csrf_token() }}";
                         dtData["activeWebsite"] = "{{ $activeWebsite }}"
                         dtData["status"] = $('#select-status').val()
-                        // dtData["fixedStatus"] = $('#select-fixed-status').val()
-                        // dtData["delegatedStatus"] = $('#select-delegated-status').val()
-                        // dtData["criticalStatus"] = $('#select-critical-status').val()
                     }
                 },
                 "columns": [{
@@ -153,6 +96,10 @@
                         "orderable": true
                     },
                     {
+                        "data": "delegated_by",
+                        "orderable": true
+                    },
+                    {
                         "data": "comment",
                         "orderable": true
                     },
@@ -163,43 +110,6 @@
                 ]
             });
 
-            // $('#select-excluded-status').on('change', function(e) {
-            //     e.preventDefault();
-            //     ItemsDatatable.ajax.reload(null, true);
-            // });
-
-            // $('#select-fixed-status').on('change', function(e) {
-            //     e.preventDefault();
-            //     ItemsDatatable.ajax.reload(null, true);
-            // });
-
-            // $('#select-delegated-status').on('change', function(e) {
-            //     e.preventDefault();
-            //     ItemsDatatable.ajax.reload(null, true);
-            // });
-
-            // $('#select-critical-status').on('change', function(e) {
-            //     e.preventDefault();
-            //     ItemsDatatable.ajax.reload(null, true);
-            // });
-
-            // $('#entities-table').questionPop({
-            //     "liveSelector": '[data-action="exclude"]'
-            // }).on('success.qp', function() {
-            //     $('#entities-table').DataTable().draw('page');
-            // });
-
-            // $('#entities-table').questionPop({
-            //     "liveSelector": '[data-action="fixed"]'
-            // }).on('success.qp', function() {
-            //     $('#entities-table').DataTable().draw('page');
-            // });
-
-            // $('#entities-table').questionPop({
-            //     "liveSelector": '[data-action="delegated-query"]'
-            // }).on('success.qp', function() {
-            //     $('#entities-table').DataTable().draw('page');
-            // });
             $('#select-status').on('change', function(e) {
                 e.preventDefault();
                 ItemsDatatable.ajax.reload(null, true);
@@ -209,8 +119,6 @@
             $(document).on('click', 'button[data-action="comment"]', function(e) {
                 e.preventDefault();
                 $('#comment').val('');
-                // Klik na dugme za otvaranje modala
-                $('button[data-action="comment"]').on('click', function() {
 
                     var queryId = $(this).data('id'); // Uzimamo query ID
                     var ajaxUrl = $(this).data('ajax-url'); // Uzimamo URL za AJAX
@@ -219,27 +127,8 @@
                     $('#commentForm').attr('action', ajaxUrl); // Set AJAX URL na formu
                     $('#queryId').val(queryId); // Postavljamo ID query-a u hidden input
 
-                    // // Ako želiš da dinamički popuniš selekt polje sa korisnicima putem AJAX-a
-                    // $.ajax({
-                    //     url: "{{ route('google_search_console.get_users') }}", // API ili ruta koja vraća listu korisnika
-                    //     method: 'GET',
-                    //     success: function(response) {
-                    //         var userSelect = $('#userSelect');
-                    //         userSelect.empty(); // Brisanje starih opcija
-                    //         $.each(response.users, function(index, user) {
-                    //             $('#userSelect').append('<option value="' + user
-                    //                 .id + '">' +
-                    //                 user.first_name + ' ' + user.last_name +
-                    //                 '</option>'
-                    //             );
-                    //         });
-
-                    //     }
-                    // });
-
                     // Otvaranje modala
                     $('#commentModal').modal('show');
-                });
             });
 
             $(document).on('click', '#submitComment', function(e) {

@@ -55,6 +55,9 @@ class GoogleSearchConsoleUserController extends Controller
                 return $row->ctr . " (" . ($row->ctr * 100) . "%)";
             })->editColumn('position', function ($row) {
                 return round($row->position, 2);
+            })->addColumn('delegated_by', function ($row) {
+                $admin = User::where('id', $row->queryStatus->master_id)->first();
+                return $admin->first_name . ' ' . $admin->last_name;
             })->editColumn('comment', function ($row) {
                 return $row->queryStatus->master_comment ?? '';
             });

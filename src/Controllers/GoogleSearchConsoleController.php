@@ -41,6 +41,13 @@ class GoogleSearchConsoleController extends Controller
                 return $row->ctr . " (" . ($row->ctr * 100) . "%)";
             })->editColumn('position', function ($row) {
                 return round($row->position, 2);
+            })->addColumn('delegated_to', function ($row) {
+                if(isset($row->queryStatus->delegated) && $row->queryStatus->delegated == 1) {
+                    $userToDelegate = User::where('id', $row->queryStatus->slave_id)->first();
+                    return $userToDelegate->first_name . ' ' . $userToDelegate->last_name;
+                }else {
+                    return '';
+                }
             })->editColumn('answer', function ($row) {
                 return $row->queryStatus->slave_comment ?? '';
             })

@@ -82,6 +82,7 @@
                                     <th>@lang('Impressions')</th>
                                     <th>@lang('CTR')</th>
                                     <th>@lang('Position')</th>
+                                    <th>@lang('Delegated to')</th>
                                     <th>@lang('Query status')</th>
                                     <th>@lang('Answer')</th>
                                     <th>@lang('Actions')</th>
@@ -158,6 +159,10 @@
                         "orderable": true
                     },
                     {
+                        "data": "delegated_to",
+                        "orderable": true
+                    },
+                    {
                         "data": "query_statuses",
                         "orderable": false
                     },
@@ -219,8 +224,6 @@
             $(document).on('click', 'button[data-action="delegated"]', function(e) {
                 e.preventDefault();
                 $('#comment').val('');
-                // Klik na dugme za otvaranje modala
-                $('button[data-action="delegated"]').on('click', function() {
 
                     var queryId = $(this).data('id'); // Uzimamo query ID
                     var ajaxUrl = $(this).data('ajax-url'); // Uzimamo URL za AJAX
@@ -249,7 +252,6 @@
 
                     // Otvaranje modala
                     $('#delegateModal').modal('show');
-                });
             });
 
             $(document).on('click', '#submitDelegated', function(e) {
