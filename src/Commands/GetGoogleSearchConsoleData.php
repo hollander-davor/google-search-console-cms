@@ -30,8 +30,8 @@ class GetGoogleSearchConsoleData extends Command
     /**
      * set queries with statuses
      */
-    protected function setQueriesWithStatuses(){
-        $this->queriesWithStatuses = SearchConsoleQueryStatuses::get();
+    protected function setQueriesWithStatuses($siteId){
+        $this->queriesWithStatuses = SearchConsoleQueryStatuses::where('site_id',$siteId)->get();
       
     }
 
@@ -46,8 +46,7 @@ class GetGoogleSearchConsoleData extends Command
         DB::table('search_console_queries')->truncate();
         DB::table('search_console_query_pages')->truncate();
 
-        //set queries with status
-        $this->setQueriesWithStatuses();
+        
     
         //instantiate google client
         $client = new Client();
@@ -80,6 +79,8 @@ class GetGoogleSearchConsoleData extends Command
 
         $websites = config('gsc-cms.websites_domains');
         foreach($websites as $website){
+            //set queries with status
+            $this->setQueriesWithStatuses($website['site_id']);
             $response = $searchConsole->searchanalytics->query($website['domain'], $request);
             if($response){
                 //delete previous queries
