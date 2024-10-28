@@ -47,7 +47,7 @@ return [
     //text to be displayed on "tag" for In progress query (in datatable)
     'in_progress_query_text' => "In progress",
     //ajax interval in seconds
-    "ajax_interval" => 10,
+    "ajax_interval" => 60,
     //statuses for slave queries
     'delivered_status' => "Delivered",
     'seen_status' => "Seen",
