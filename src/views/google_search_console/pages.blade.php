@@ -8,7 +8,7 @@
 @section('content')
 
     {{-- this is example breadcrumbs with website picker --}}
-    @include('_layout.partials.breadcrumbs', [
+    @include('google_search_console.partials.breadcrumbs', [
         'pageTitle' => __('Google Search Console'),
         'websitePicker' => 0,
         'routeName' => 'google_search_console.index',
