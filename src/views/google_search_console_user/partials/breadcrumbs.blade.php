@@ -5,7 +5,7 @@
             @if(!empty($websitePicker))
             <div class="pull-right p-0 m-0">
                 @php
-                    $websites = config('gsc-cms.websites');
+                    $websites = config('gsc-cms.websites_domains');
                 @endphp
                 @if(count($websites) > 1)
                     @if(isset($showRootSiteName) && $showRootSiteName)
@@ -17,8 +17,8 @@
                     @endif
                     @foreach($websites as $website)
                         <a 
-                            href="{{ route($routeName, ['activeWebsite' => $website['id']]) }}" 
-                            class="btn waves-effect waves-light mr-2 mb-1 {{/*primer za aktivan i neaktivan sajt*/($activeWebsite == $website['id']) ? 'btn-success' : 'btn-danger'}}">
+                            href="{{ route($routeName, ['activeWebsite' => $website['site_id']]) }}" 
+                            class="btn waves-effect waves-light mr-2 mb-1 {{/*primer za aktivan i neaktivan sajt*/($activeWebsite == $website['site_id']) ? 'btn-success' : 'btn-danger'}}">
                             {{$website['short_title']}}
                         </a>
                     @endforeach

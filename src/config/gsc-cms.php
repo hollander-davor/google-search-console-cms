@@ -7,24 +7,10 @@ return [
     'websites_domains' => [
         [
             'domain' => '',
-            'site_id' => 1
-        ]
-    ],
-    //breadcrumbs
-    'websites' => [
-        [
-            'id' => 1,
-            'short_title' => 'Story'
-        ],
-        [
-            'id' => 3,
-            'short_title' => 'Hellomagazin'
-        ],
-        [
-            'id' => 4,
-            'short_title' => 'Gloria'
-        ],
+            'site_id' => 1,
+            'short_title' => ''
 
+        ]
     ],
     //how many days should data be old (default is 7 days, it means that we will get data for last 7 days)
     'days_before_now' => 7,
