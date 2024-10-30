@@ -21,6 +21,7 @@ class GoogleSearchConsoleController extends Controller
      */
     public function index($activeWebsite = false)
     {
+        $maxValue = 10000;
         if ($activeWebsite) {
             $maxImpressionQuery = SearchConsoleQuery::where('site_id', $activeWebsite)->orderBy('impressions', 'desc')->first();
             if (isset($maxImpressionQuery)) {
