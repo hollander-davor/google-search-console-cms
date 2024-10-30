@@ -21,8 +21,18 @@ class GoogleSearchConsoleController extends Controller
      */
     public function index($activeWebsite = false)
     {
+        if ($activeWebsite) {
+            $maxImpressionQuery = SearchConsoleQuery::where('site_id', $activeWebsite)->orderBy('impressions', 'desc')->first();
+            if (isset($maxImpressionQuery)) {
+                $maxValue = $maxImpressionQuery->impressions;
+            } else {
+                $maxValue = 10000;
+            }
+        }
+
         return view('google_search_console.index', [
-            'activeWebsite' => $activeWebsite
+            'activeWebsite' => $activeWebsite,
+            'maxValue' => $maxValue
         ]);
     }
 
@@ -96,6 +106,34 @@ class GoogleSearchConsoleController extends Controller
                         //show those that are not critical
                         $queries->where('critical', 0);
                     }
+                }
+
+                $slider1_min = request()->input('slider1_min');
+                $slider1_max = request()->input('slider1_max');
+
+                $slider2_min = request()->input('slider2_min');
+                $slider2_max = request()->input('slider2_max');
+
+                $slider3_min = request()->input('slider3_min');
+                $slider3_max = request()->input('slider3_max');
+
+                $slider4_min = request()->input('slider4_min');
+                $slider4_max = request()->input('slider4_max');
+
+                if (!is_null($slider1_min) && !is_null($slider1_max)) {
+                    $queries->whereBetween('clicks', [$slider1_min,  $slider1_max]);
+                }
+
+                if (!is_null($slider2_min) && !is_null($slider2_max)) {
+                    $queries->whereBetween('impressions', [$slider2_min,  $slider2_max]);
+                }
+
+                if (!is_null($slider3_min) && !is_null($slider3_max)) {
+                    $queries->whereBetween('ctr', [$slider3_min,  $slider3_max]);
+                }
+
+                if (!is_null($slider4_min) && !is_null($slider4_max)) {
+                    $queries->whereBetween('position', [$slider4_min,  $slider4_max]);
                 }
 
                 //filter by lhf status

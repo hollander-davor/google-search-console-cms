@@ -3,10 +3,16 @@
 @section('head_title', __('Google Search Console'))
 
 @push('head_links')
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.0/nouislider.min.css" rel="stylesheet">
 @endpush
 
 @section('content')
-
+<style>
+    .slider {
+        margin: 20px;
+        width: 300px;
+    }
+</style>
     {{-- this is example breadcrumbs with website picker --}}
     @include('google_search_console.partials.breadcrumbs', [
         'pageTitle' => __('Google Search Console'),
@@ -72,6 +78,24 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="form-group col-3">
+                                <label class="control-label" style="margin-bottom: 20px;">@lang('Filter by clicks value')</label>
+                                <div id="slider1" class="slider"></div>
+                            </div>
+                            <div class="form-group col-3">
+                                <label class="control-label" style="margin-bottom: 20px;">@lang('Filter by impressions value')</label>
+                                <div id="slider2" class="slider"></div>
+                            </div>
+                            <div class="form-group col-3">
+                                <label class="control-label" style="margin-bottom: 20px;">@lang('Filter by CTR value')</label>
+                                <div id="slider3" class="slider"></div>
+                            </div>
+                            <div class="form-group col-3">
+                                <label class="control-label" style="margin-bottom: 20px;">@lang('Filter by position value')</label>
+                                <div id="slider4" class="slider"></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <table id="entities-table" class="table table-striped">
@@ -99,8 +123,85 @@
 @endsection
 
 @push('footer_scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.0/nouislider.min.js"></script>
     <script>
         $(document).ready(function() {
+        // Slider za kolonu 1 (prirodni brojevi od 1 do 10,000)
+        var slider1 = document.getElementById('slider1');
+            noUiSlider.create(slider1, {
+                start: [0, {{$maxValue}}],
+                connect: true,
+                range: {
+                    'min': 0,
+                    'max': {{$maxValue}}
+                },
+                tooltips: {
+                    // tooltips are output only, so only a "to" is needed
+                    to: function(numericValue) {
+                        return numericValue.toFixed(0);
+                    }
+                },
+                step: 100
+            });
+            slider1.noUiSlider.set(['1', '{{$maxValue}}']);
+
+            // Slider za kolonu 2 (prirodni brojevi od 1 do 10,000)
+            var slider2 = document.getElementById('slider2');
+            noUiSlider.create(slider2, {
+                start: [0, {{$maxValue}}],
+                connect: true,
+                range: {
+                    'min': 0,
+                    'max': {{$maxValue}}
+                },
+                tooltips: {
+                    // tooltips are output only, so only a "to" is needed
+                    to: function(numericValue) {
+                        return numericValue.toFixed(0);
+                    }
+                },
+                step: 100
+            });
+            slider2.noUiSlider.set(['1', '{{$maxValue}}']);
+
+            // Slider za kolonu 3 (brojevi sa dve decimale između 0 i 1)
+            var slider3 = document.getElementById('slider3');
+            noUiSlider.create(slider3, {
+                start: [0, 1],
+                connect: true,
+                range: {
+                    'min': 0,
+                    'max': 1
+                },
+                tooltips: {
+                    // tooltips are output only, so only a "to" is needed
+                    to: function(numericValue) {
+                        return numericValue.toFixed(2);
+                    }
+                },
+                step: 0.01
+            });
+            slider3.noUiSlider.set(['0', '1']);
+
+            // Slider za kolonu 4 (brojevi od 1 do 100 sa dve decimale)
+            var slider4 = document.getElementById('slider4');
+            noUiSlider.create(slider4, {
+                start: [0, 100],
+                connect: true,
+                range: {
+                    'min': 0,
+                    'max': 100
+                },
+                tooltips: {
+                    // tooltips are output only, so only a "to" is needed
+                    to: function(numericValue) {
+                        return numericValue.toFixed(2);
+                    }
+                },
+                step: 0.01
+            });
+            slider4.noUiSlider.set(['0', '100']);
+
             let ItemsDatatable = $('#entities-table').DataTable({
                 "processing": true,
                 "serverSide": true,
@@ -129,6 +230,19 @@
                     url: "@route('google_search_console.datatable')",
                     type: "POST",
                     data: function(dtData) {
+                        var slider1Values = $('#slider1')[0].noUiSlider.get();
+                        var slider2Values = $('#slider2')[0].noUiSlider.get();
+                        var slider3Values = $('#slider3')[0].noUiSlider.get();
+                        var slider4Values = $('#slider4')[0].noUiSlider.get();
+                        dtData['slider1_min'] = slider1Values[0];
+                        dtData['slider1_max'] = slider1Values[1];
+                        dtData['slider2_min'] = slider2Values[0];
+                        dtData['slider2_max'] = slider2Values[1];
+                        dtData['slider3_min'] = slider3Values[0];
+                        dtData['slider3_max'] = slider3Values[1];
+                        dtData['slider4_min'] = slider4Values[0];
+                        dtData['slider4_max'] = slider4Values[1];
+
                         dtData["_token"] = "{{ csrf_token() }}";
                         dtData["activeWebsite"] = "{{ $activeWebsite }}"
                         dtData["excludedStatus"] = $('#select-excluded-status').val()
@@ -199,6 +313,19 @@
 
             $('#select-lhf-status').on('change', function(e) {
                 e.preventDefault();
+                ItemsDatatable.ajax.reload(null, true);
+            });
+
+            $('#slider1')[0].noUiSlider.on('change', function () {
+                ItemsDatatable.ajax.reload(null, true);
+            });
+            $('#slider2')[0].noUiSlider.on('change', function () {
+                ItemsDatatable.ajax.reload(null, true);
+            });
+            $('#slider3')[0].noUiSlider.on('change', function () {
+                ItemsDatatable.ajax.reload(null, true);
+            });
+            $('#slider4')[0].noUiSlider.on('change', function () {
                 ItemsDatatable.ajax.reload(null, true);
             });
 
