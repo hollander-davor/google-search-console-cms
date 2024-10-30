@@ -37,7 +37,8 @@ class GoogleSearchConsoleUserController extends Controller
         if (isset($activeWebsite)) {
             $queries = SearchConsoleQuery::where('site_id', $activeWebsite)->whereHas('queryStatus', function ($query) use ($slave) {
                 $query->where('slave_id', $slave);
-            });
+            })
+                ->orderBy('created_at', 'desc');
 
             $slaveId = Auth::user()->id;
             $slaveStatuses = SearchConsoleQueryStatuses::where('site_id', $activeWebsite)->where('slave_id', $slaveId)->where('slave_status', 1)->get();

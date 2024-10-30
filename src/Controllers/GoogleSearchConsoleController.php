@@ -183,7 +183,7 @@ class GoogleSearchConsoleController extends Controller
             //if query exists in queries with statuses we update it
             if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
                 if ($existingQueryWithStatus->excluded == 1 && $existingQueryWithStatus->fixed == 0 && $existingQueryWithStatus->delegated == 0) {
-                    // $existingQueryWithStatus->delete();
+                    $existingQueryWithStatus->delete();
                     $query->update([
                         'query_status_id' => 0
                     ]);
@@ -234,7 +234,7 @@ class GoogleSearchConsoleController extends Controller
             if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
 
                 if ($existingQueryWithStatus->fixed == 1 && $existingQueryWithStatus->excluded == 0 && $existingQueryWithStatus->delegated == 0) {
-                    // $existingQueryWithStatus->delete();
+                    $existingQueryWithStatus->delete();
                     $query->update([
                         'query_status_id' => 0
                     ]);
@@ -287,7 +287,7 @@ class GoogleSearchConsoleController extends Controller
             if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
 
                 if ($existingQueryWithStatus->delegated == 1 && $existingQueryWithStatus->excluded == 0 && $existingQueryWithStatus->fixed == 0) {
-                    // $existingQueryWithStatus->delete();
+                    $existingQueryWithStatus->delete();
                     $query->update([
                         'query_status_id' => 0
                     ]);
