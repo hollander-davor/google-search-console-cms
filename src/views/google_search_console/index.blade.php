@@ -381,6 +381,8 @@
                     $('#delegateModal').modal('show');
             });
 
+            $('.user-select select').select2({});
+            
             $(document).on('click', '#submitDelegated', function(e) {
                 e.preventDefault();
 
