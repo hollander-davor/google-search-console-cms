@@ -12,7 +12,6 @@ use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Google\Client;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Website\Website;
 use Illuminate\Support\Facades\Auth;
 
 class GoogleSearchConsoleUserController extends Controller
@@ -243,13 +242,12 @@ class GoogleSearchConsoleUserController extends Controller
     public function ajaxNewQueries()
     {
         $userId = auth()->id();
-        $websites = Website::where('active', 1)->get();
 
-        foreach ($websites as $website) {
+        foreach (config('gsc-cms.websites_domains') as $website) {
             $data[] = [
-                'site_id' => $website->id,
-                'name' => $website->short_title,
-                'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', $website->id)
+                'site_id' => $website['site_id'],
+                'name' => $website['short_title'],
+                'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', $website['site_id'])
                     ->where('slave_status', SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED)
                     ->count()
             ];
