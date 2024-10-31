@@ -29,8 +29,6 @@ class GoogleSearchConsoleController extends Controller
             } else {
                 $maxValue = 10000;
             }
-        }else {
-            $maxValue = '';
         }
 
         return view('google_search_console.index', [
