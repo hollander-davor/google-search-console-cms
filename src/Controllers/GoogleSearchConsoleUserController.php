@@ -12,7 +12,6 @@ use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Google\Client;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Website\Website;
 use Illuminate\Support\Facades\Auth;
 
 class GoogleSearchConsoleUserController extends Controller
@@ -36,9 +35,8 @@ class GoogleSearchConsoleUserController extends Controller
         $slave = Auth::user()->id;
         if (isset($activeWebsite)) {
             $queries = SearchConsoleQuery::where('site_id', $activeWebsite)->whereHas('queryStatus', function ($query) use ($slave) {
-                $query->where('slave_id', $slave);
-            })
-                ->orderBy('created_at', 'desc');
+                $query->where('slave_id', $slave)->orderBy('created_at', 'desc');
+            });
 
             $slaveId = Auth::user()->id;
             $slaveStatuses = SearchConsoleQueryStatuses::where('site_id', $activeWebsite)->where('slave_id', $slaveId)->where('slave_status', 1)->get();
@@ -245,36 +243,46 @@ class GoogleSearchConsoleUserController extends Controller
     {
         $userId = auth()->id();
 
-        $data = [
-            [
-                'site_id' => 1,
-                'name' => "Story",
-                'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', 1)
+        foreach (config('gsc-cms.websites_domains') as $website) {
+            $data[] = [
+                'site_id' => $website['site_id'],
+                'name' => $website['short_title'],
+                'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', $website['site_id'])
                     ->where('slave_status', SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED)
                     ->count()
-            ],
-            [
-                'site_id' => 2,
-                'name' => "Lepota i zdravlje",
-                'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', 2)
-                    ->where('slave_status', SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED)
-                    ->count()
-            ],
-            [
-                'site_id' => 3,
-                'name' => "Hellomagazin",
-                'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', 3)
-                    ->where('slave_status', SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED)
-                    ->count()
-            ],
-            [
-                'site_id' => 4,
-                'name' => "Gloria",
-                'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', 4)
-                    ->where('slave_status', SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED)
-                    ->count()
-            ],
-        ];
+            ];
+        }
+
+        // $data = [
+        //     [
+        //         'site_id' => 1,
+        //         'name' => "Story",
+        //         'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', 1)
+        //             ->where('slave_status', SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED)
+        //             ->count()
+        //     ],
+        //     [
+        //         'site_id' => 2,
+        //         'name' => "Lepota i zdravlje",
+        //         'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', 2)
+        //             ->where('slave_status', SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED)
+        //             ->count()
+        //     ],
+        //     [
+        //         'site_id' => 3,
+        //         'name' => "Hellomagazin",
+        //         'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', 3)
+        //             ->where('slave_status', SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED)
+        //             ->count()
+        //     ],
+        //     [
+        //         'site_id' => 4,
+        //         'name' => "Gloria",
+        //         'count' => SearchConsoleQueryStatuses::where('slave_id', $userId)->where('site_id', 4)
+        //             ->where('slave_status', SearchConsoleQueryStatuses::SLAVE_STATUS_DELIVERED)
+        //             ->count()
+        //     ],
+        // ];
 
         foreach($data as $key => $value) {
             if($value['count'] == 0) {

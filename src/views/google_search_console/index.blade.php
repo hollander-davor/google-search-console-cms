@@ -7,12 +7,53 @@
 @endpush
 
 @section('content')
-<style>
-    .slider {
-        margin: 20px;
-        width: 300px;
-    }
-</style>
+    <style>
+        .slider {
+            margin: 20px;
+            width: 300px;
+        }
+
+        .video-wrapper {
+            display: none;
+            padding-inline: 15px;
+        }
+
+        .video-wrapper .row {
+            justify-content: space-between;
+        }
+
+        #video-container,
+        .legend {
+            flex: 0 0 calc(50% - 4rem);
+        }
+
+        #video-container {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        #video-container::after {
+            content: '';
+            display: block;
+            padding-bottom: 56.25%;
+
+        }
+
+        #video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #view-instructions {
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            font-size: 15px;
+        }
+    </style>
     {{-- this is example breadcrumbs with website picker --}}
     @include('google_search_console.partials.breadcrumbs', [
         'pageTitle' => __('Google Search Console'),
@@ -20,6 +61,96 @@
         'routeName' => 'google_search_console.index',
     ])
     @if ($activeWebsite)
+        <button id="view-instructions" class="btn btn-primary">Click to view instructions</button>
+        <div class="video-wrapper">
+            <div class="row">
+                <div id="video-container">
+                    <iframe
+                        src="https://player.vimeo.com/video/1025383415?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+                        frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write"
+                        title="gscTutorial"></iframe>
+                </div>
+                <div class="legend" style="color:white">
+                    <h2>Akcije nad Query-jem</h2>
+                    <ul>
+                        <li>
+                            <span style="font-weight: bold;color:#ffb09c">Excluded:</span> Queries koji su dobro
+                            pozicionirani ili se iz nekog
+                            razloga neće raditi na njima mogu biti označeni kao isključeni. Na vrhu tabele nalazi se filter
+                            u odnosu na dodeljenu akciju excluded.
+                        </li>
+                        <li>
+                            <span style="font-weight: bold;color:#d8e6ad">Fixed:</span> Kada je rad na query-ju završen,
+                            može se označiti kao rešen.
+                            Takođe, postoji filter koji omogućava prikaz svih, samo rešenih, ili samo nerešenih querija.
+                        </li>
+                        <li>
+                            <span style="font-weight: bold;color:#9dadf5">Delegiranje Querija:</span> Klikom na ovu akciju,
+                            otvara se modal sa select
+                            poljem gde admin može izabrati korisnika ili drugog admina kome će delegirati query. Moguće je,
+                            ali nije obavezno, dodati komentar ili poruku osobi kojoj se query delegira. Kada je query
+                            delegiran, njegov status se menja u "delivered."
+                        </li>
+                        <li>
+                            <span style="font-weight: bold">See Pages:</span> Klikom na ovu akciju, dobija se spisak svih
+                            stranica
+                            vezanih za query i na kojima se može raditi radi poboljšanja pozicije u pretrazi.
+                        </li>
+                    </ul>
+
+                    <h2>Dodatni Filteri</h2>
+                    <ul>
+                        <li>
+                            <span style="font-weight: bold;color:#c1e1ec">Great Potential:</span> Ovaj filter prikazuje
+                            querije sa velikim brojem
+                            impresija, ali malim brojem klikova.
+                        </li>
+                        <li>
+                            <span style="font-weight: bold;color:#c1e1ec">Low Hanging Fruit:</span> Ovaj filter se definiše
+                            na osnovu pozicije i
+                            odnosi se na pozicije od 9. do 15.
+                        </li>
+                    </ul>
+                    <h2>Great potential - saveti </h2>
+                    <ul>
+                        <li>
+                            Kada reč/i u pretrazi ima/ju <b>veliki potencijal</b>, to znači da je na Google-u prikazana u
+                            rezultatima pretrage, ali da SEO naslov (ne i sam naslov vesti) nije bio dobar, takodje nije bio
+                            ni klikabilan. Samim tim korisnik nije ni ušao na sajt. Svaki SEO naslov treba u prve 3 ili 4
+                            reči da ima u sebi poentu teksta i da ne prelazi više od 60 karaktera.
+                            Primer: Čuli ste u prevozu do posla da je u Beogradu bio koncert pevačice Jovane i da je probila
+                            sve rekorde. Loš SEO naslov je: "Neverovatni broj publike u Areni na koncertu Jovane…". Dok bi
+                            dobar SEO naslov bio: "Jovana u Areni imala 50.000 posetioca - slike". Jako je bitno da kada
+                            završite vest, sami sebi kažete šta sam to čuo/čula u prolazu i sada želim da nadjem, a nalazi
+                            se u ovoj vesti. Ovo se zove <b>USP - Unique Selling Propisition/Point</b>.
+                        </li>
+                        <li>
+                            <span class="bold">LINK DO TUTORIJALA:</span><a
+                                href="https://searchengineland.com/unique-selling-proposition-key-element-seo-success-289690"
+                                target="_blank"><span class="bold" style="font-weight: bold; color:#ffb09c;"> Great
+                                    potential tutorijal</span></a>
+                        </li>
+                    </ul>
+                    <h2 class="bold">Low Hanging fruit - saveti </h2>
+                    <ul>
+                        <li>
+                            Kada je ključna rec <span class="bold" style="font-weight:bold;color:#c1e1ec">Low Hanging
+                                Fruit (LHF)</span> to znači da je ona negde pred kraj prve/početak druge stranice Google-a.
+                            Da bi se reč “pogurala” i zauzela bolju poziciju potrebno je da napišete nove vesti ili izmenite
+                            starije vesti (ne starije od 7 do 10 dana) i da u okviru njih linkujete stranicu koja je
+                            označena kao LHF. Takodje je potrebno da se ta ista vest drži odredjeno vreme na naslovnoj
+                            strani portala i kategorije (nekoliko sati/pola dana/dan) da bi dobila na značaju.
+                        </li>
+                        <li>
+                            <span class="bold">LINK DO TUTORIJALA:</span><a
+                                href="https://searchengineland.com/low-hanging-fruit-5-fast-simple-seo-tactics-harvest-tons-organic-traffic-279936"
+                                target="_blank"><span class="bold" style="font-weight: bold; color:#ffb09c;"> LHF
+                                    tutorijal</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -123,17 +254,23 @@
 @endsection
 
 @push('footer_scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.0/nouislider.min.js"></script>
+    <script src="https://player.vimeo.com/api/player.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.0/nouislider.min.js"></script>
     <script>
         $(document).ready(function() {
-        // Slider za kolonu 1 (prirodni brojevi od 1 do 10,000)
-        var slider1 = document.getElementById('slider1');
+            
+            $('#view-instructions').click(function() {
+                $(this).next('.video-wrapper').slideToggle();
+            });
+
+            // Slider za kolonu 1 (prirodni brojevi od 1 do 10,000)
+            var slider1 = document.getElementById('slider1');
             noUiSlider.create(slider1, {
-                start: [0, {{$maxValue}}],
+                start: [0, {{ $maxValue }}],
                 connect: true,
                 range: {
                     'min': 0,
-                    'max': {{$maxValue}}
+                    'max': {{ $maxValue }}
                 },
                 tooltips: {
                     // tooltips are output only, so only a "to" is needed
@@ -143,16 +280,16 @@
                 },
                 step: 100
             });
-            slider1.noUiSlider.set(['1', '{{$maxValue}}']);
+            slider1.noUiSlider.set(['1', '{{ $maxValue }}']);
 
             // Slider za kolonu 2 (prirodni brojevi od 1 do 10,000)
             var slider2 = document.getElementById('slider2');
             noUiSlider.create(slider2, {
-                start: [0, {{$maxValue}}],
+                start: [0, {{ $maxValue }}],
                 connect: true,
                 range: {
                     'min': 0,
-                    'max': {{$maxValue}}
+                    'max': {{ $maxValue }}
                 },
                 tooltips: {
                     // tooltips are output only, so only a "to" is needed
@@ -162,7 +299,7 @@
                 },
                 step: 100
             });
-            slider2.noUiSlider.set(['1', '{{$maxValue}}']);
+            slider2.noUiSlider.set(['1', '{{ $maxValue }}']);
 
             // Slider za kolonu 3 (brojevi sa dve decimale između 0 i 1)
             var slider3 = document.getElementById('slider3');
@@ -218,7 +355,8 @@
                                 '{{ config('gsc-cms.excluded_query_color') }}');
                         }
                         if (data.query_status.fixed == 1) {
-                            $(row).css('background-color', '{{ config('gsc-cms.fixed_query_color') }}');
+                            $(row).css('background-color',
+                            '{{ config('gsc-cms.fixed_query_color') }}');
                         }
                         if (data.query_status.delegated == 1) {
                             $(row).css('background-color',
@@ -316,16 +454,16 @@
                 ItemsDatatable.ajax.reload(null, true);
             });
 
-            $('#slider1')[0].noUiSlider.on('change', function () {
+            $('#slider1')[0].noUiSlider.on('change', function() {
                 ItemsDatatable.ajax.reload(null, true);
             });
-            $('#slider2')[0].noUiSlider.on('change', function () {
+            $('#slider2')[0].noUiSlider.on('change', function() {
                 ItemsDatatable.ajax.reload(null, true);
             });
-            $('#slider3')[0].noUiSlider.on('change', function () {
+            $('#slider3')[0].noUiSlider.on('change', function() {
                 ItemsDatatable.ajax.reload(null, true);
             });
-            $('#slider4')[0].noUiSlider.on('change', function () {
+            $('#slider4')[0].noUiSlider.on('change', function() {
                 ItemsDatatable.ajax.reload(null, true);
             });
 
@@ -352,34 +490,36 @@
                 e.preventDefault();
                 $('#comment').val('');
 
-                    var queryId = $(this).data('id'); // Uzimamo query ID
-                    var ajaxUrl = $(this).data('ajax-url'); // Uzimamo URL za AJAX
+                var queryId = $(this).data('id'); // Uzimamo query ID
+                var ajaxUrl = $(this).data('ajax-url'); // Uzimamo URL za AJAX
 
-                    // Postavljanje forme u modal
-                    $('#delegateForm').attr('action', ajaxUrl); // Set AJAX URL na formu
-                    $('#queryId').val(queryId); // Postavljamo ID query-a u hidden input
+                // Postavljanje forme u modal
+                $('#delegateForm').attr('action', ajaxUrl); // Set AJAX URL na formu
+                $('#queryId').val(queryId); // Postavljamo ID query-a u hidden input
 
-                    // Ako želiš da dinamički popuniš selekt polje sa korisnicima putem AJAX-a
-                    $.ajax({
-                        url: "{{ route('google_search_console.get_users') }}", // API ili ruta koja vraća listu korisnika
-                        method: 'GET',
-                        success: function(response) {
-                            var userSelect = $('#userSelect');
-                            userSelect.empty(); // Brisanje starih opcija
-                            $.each(response.users, function(index, user) {
-                                $('#userSelect').append('<option value="' + user
-                                    .id + '">' +
-                                    user.first_name + ' ' + user.last_name +
-                                    '</option>'
-                                );
-                            });
+                // Ako želiš da dinamički popuniš selekt polje sa korisnicima putem AJAX-a
+                $.ajax({
+                    url: "{{ route('google_search_console.get_users') }}", // API ili ruta koja vraća listu korisnika
+                    method: 'GET',
+                    success: function(response) {
+                        var userSelect = $('#userSelect');
+                        userSelect.empty(); // Brisanje starih opcija
+                        $.each(response.users, function(index, user) {
+                            $('#userSelect').append('<option value="' + user
+                                .id + '">' +
+                                user.first_name + ' ' + user.last_name +
+                                '</option>'
+                            );
+                        });
 
-                        }
-                    });
+                    }
+                });
 
-                    // Otvaranje modala
-                    $('#delegateModal').modal('show');
+                // Otvaranje modala
+                $('#delegateModal').modal('show');
             });
+
+            $('.user-select select').select2({});
 
             $(document).on('click', '#submitDelegated', function(e) {
                 e.preventDefault();

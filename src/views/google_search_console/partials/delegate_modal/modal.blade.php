@@ -3,7 +3,7 @@
         background-color: unset !important;
     }
 </style>
-<div class="modal fade" id="delegateModal" tabindex="-1" role="dialog" aria-labelledby="delegateModalLabel"
+<div class="modal fade" id="delegateModal" role="dialog" aria-labelledby="delegateModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -17,7 +17,7 @@
                     <!-- Form fields inside modal -->
                     <form id="delegateForm" method="POST" action="">
                         @csrf
-                        <div class="form-group">
+                        <div class="form-group user-select">
                             <label for="userSelect">@lang('Select User')</label>
                             <select class="form-control" id="userSelect" name="user_id">
 
