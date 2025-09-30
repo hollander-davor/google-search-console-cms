@@ -32,7 +32,7 @@ class GetGoogleSearchConsoleData extends Command
      */
     protected function setQueriesWithStatuses($siteId){
         $this->queriesWithStatuses = SearchConsoleQueryStatuses::where('site_id',$siteId)->get();
-      
+
     }
 
     /**
@@ -46,8 +46,8 @@ class GetGoogleSearchConsoleData extends Command
         DB::table('search_console_queries')->truncate();
         DB::table('search_console_query_pages')->truncate();
 
-        
-    
+
+
         //instantiate google client
         $client = new Client();
         //set the path to Oauth credentials
@@ -75,7 +75,7 @@ class GetGoogleSearchConsoleData extends Command
         $request->setStartDate($dateFrom);
         $request->setEndDate($dateTo);
         $request->setDimensions(['query']);
-       
+
 
         $websites = config('gsc-cms.websites_domains');
         foreach($websites as $website){
@@ -85,7 +85,9 @@ class GetGoogleSearchConsoleData extends Command
             if($response){
                 //delete previous queries
                 //to be done!!!
-    
+
+                $pattern = '/\b(delo(\.si)?|(ona\s?plus|onaplus(\.si)?)|slovenske?\s*novice(\.si)?|delo(in)?dom(\.si)?|odprta?k?kuhinja(\.si)?|delosi|slovenskene\s*novice|ona\+|oprtakuhinja|odrta\s*kuhinja|(naslovnica|naslovna)|(portal|časopis|revija)|(pdf|epaper)|(prijava|registracija|kontakt)|(oglasi?|oglasnik)|spored|(vreme|horoskop)(\s*danes)?|sudoku|križanka|napovednik|delo\s*(novice|naslovnica|pdf\s*izdaja)|slovenske\s*novice\s*(danes|naslovnica|epaper)|ona\s*plus\s*revija|odprta\s*kuhinja\s*recepti|(današnje|najnovejše|vse|jutranje|popoldanske|dnevne)\s*novice|breaking\s*news|news\s*slovenia|splet(n[iy])?\s*(portal|novice)|online\s*časopis|mali\s*oglasi\s*delo|oglasi\s*slovenske\s*novice|tv\s*spored(\s*(delo|slovenske\s*novice))?)\b/iu';
+
                 //enter new queries
                 foreach($response as $query){
                     $newQuery = new SearchConsoleQuery();
@@ -104,13 +106,28 @@ class GetGoogleSearchConsoleData extends Command
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
+
                     $newQuery->fill($data);
                     $newQuery->save();
+
+                    if (preg_match($pattern, $query->keys[0])) {
+
+                        $queryStatus = new SearchConsoleQueryStatuses();
+                        $data['excluded'] = 1;
+                        $queryStatus->fill($data);
+                        $queryStatus->save();
+
+                        $newQuery->update([
+                            'query_status_id' => $queryStatus->id
+                        ]);
+                    }
+
                 }
+
             }
         }
-        
-        
+
+
     }
 
      /**
@@ -157,7 +174,7 @@ class GetGoogleSearchConsoleData extends Command
 
     /**
      * determine if query is low hanging fruit
-     * 
+     *
      */
     protected function checkIfLHF($query){
         $lowThreshold = config('gsc-cms.low_lhf_value');
