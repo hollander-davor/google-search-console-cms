@@ -30,10 +30,12 @@ class GoogleSearchConsoleController extends Controller
                 $maxValue = 10000;
             }
         }
+        $daysOld = config('gsc-cms.days_before_now');
 
         return view('google_search_console.index', [
             'activeWebsite' => $activeWebsite,
-            'maxValue' => $maxValue
+            'maxValue' => $maxValue,
+            'daysOld' => $daysOld
         ]);
     }
 
@@ -137,6 +139,20 @@ class GoogleSearchConsoleController extends Controller
                     $queries->whereBetween('position', [$slider4_min,  $slider4_max]);
                 }
 
+                //filter by days old
+                //if value is 'all', we will all
+                if (isset(request()->daysOld)) {
+                    $daysOld = request()->daysOld;
+                    if($daysOld == 1){
+                        $queries->where('days_old', 1);
+                    }elseif($daysOld == 3){
+                        $queries->where('days_old', 3);
+                    }
+                    elseif($daysOld == 7){
+                        $queries->where('days_old', 7);
+                    }
+                }
+
                 //filter by lhf status
                 //if value is 'all', we will show both true and false
                 if (isset(request()->lhfStatus)) {
@@ -213,37 +229,43 @@ class GoogleSearchConsoleController extends Controller
     public function toggleExclude(SearchConsoleQuery $query)
     {
         if (isset($query)) {
-            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query', $query->query)->first();
-            if ($existingQueryWithStatus->excluded == 1) {
-                $newStatus = 0;
-            } elseif ($existingQueryWithStatus->excluded == 0) {
-                $newStatus = 1;
-            }
-            //if query exists in queries with statuses we update it
-            if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
-                if ($existingQueryWithStatus->excluded == 1 && $existingQueryWithStatus->fixed == 0 && $existingQueryWithStatus->delegated == 0) {
-                    $existingQueryWithStatus->delete();
-                    $query->update([
-                        'query_status_id' => 0
-                    ]);
-                } else {
-                    $existingQueryWithStatus->update(['excluded' => $newStatus]);
+            $existingQueriesWithStatus = SearchConsoleQueryStatuses::where('query', $query->query)->get();
+            $newStatus = 0;
+
+            foreach($existingQueriesWithStatus as $existingQueryWithStatus){
+                if ($existingQueryWithStatus->excluded == 1) {
+                    $newStatus = 0;
+                } elseif ($existingQueryWithStatus->excluded == 0) {
+                    $newStatus = 1;
                 }
-            } else {
-                $newQueryWithStatus = new SearchConsoleQueryStatuses();
-                $data = [
-                    'site_id' => $newQueryWithStatus->site_id,
-                    'query' => $newQueryWithStatus->query,
-                    'excluded' => $newStatus
-                ];
-                $newQueryWithStatus->fill($data);
-                $newQueryWithStatus->save();
+                //if query exists in queries with statuses we update it
+                if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
+                    if ($existingQueryWithStatus->excluded == 1 && $existingQueryWithStatus->fixed == 0 && $existingQueryWithStatus->delegated == 0) {
+                        $existingQueryWithStatus->delete();
+                        $query->update([
+                            'query_status_id' => 0
+                        ]);
+                    } else {
+                        $existingQueryWithStatus->update(['excluded' => $newStatus]);
+                    }
+                } else {
+                    $newQueryWithStatus = new SearchConsoleQueryStatuses();
+                    $data = [
+                        'site_id' => $newQueryWithStatus->site_id,
+                        'query' => $newQueryWithStatus->query,
+                        'excluded' => $newStatus
+                    ];
+                    $newQueryWithStatus->fill($data);
+                    $newQueryWithStatus->save();
+                }
+    
+                // $query->update([
+                //     'excluded' => $newStatus
+                // ]);
+    
             }
 
-            // $query->update([
-            //     'excluded' => $newStatus
-            // ]);
-
+            
             if ($newStatus == 0) {
                 $messageIdentifier = "included";
             } elseif ($newStatus == 1) {
@@ -263,38 +285,42 @@ class GoogleSearchConsoleController extends Controller
     public function toggleFixed(SearchConsoleQuery $query)
     {
         if (isset($query)) {
-            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query', $query->query)->first();
-            if ($existingQueryWithStatus->fixed == 1) {
-                $newStatus = 0;
-            } elseif ($existingQueryWithStatus->fixed == 0) {
-                $newStatus = 1;
-            }
-            //if query exists in queries with statuses we update it
-            if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
-
-                if ($existingQueryWithStatus->fixed == 1 && $existingQueryWithStatus->excluded == 0 && $existingQueryWithStatus->delegated == 0) {
-                    $existingQueryWithStatus->delete();
-                    $query->update([
-                        'query_status_id' => 0
-                    ]);
-                } else {
-                    $existingQueryWithStatus->update(['fixed' => $newStatus]);
-                    $existingQueryWithStatus->update(['delegated' => 0]);
+            $existingQueriesWithStatus = SearchConsoleQueryStatuses::where('query', $query->query)->get();
+            $newStatus = 0;
+            foreach($existingQueriesWithStatus as $existingQueryWithStatus){
+                if ($existingQueryWithStatus->fixed == 1) {
+                    $newStatus = 0;
+                } elseif ($existingQueryWithStatus->fixed == 0) {
+                    $newStatus = 1;
                 }
-            } else {
-                $newQueryWithStatus = new SearchConsoleQueryStatuses();
-                $data = [
-                    'site_id' => $newQueryWithStatus->site_id,
-                    'query' => $newQueryWithStatus->query,
-                    'fixed' => $newStatus
-                ];
-                $newQueryWithStatus->fill($data);
-                $newQueryWithStatus->save();
+                //if query exists in queries with statuses we update it
+                if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
+    
+                    if ($existingQueryWithStatus->fixed == 1 && $existingQueryWithStatus->excluded == 0 && $existingQueryWithStatus->delegated == 0) {
+                        $existingQueryWithStatus->delete();
+                        $query->update([
+                            'query_status_id' => 0
+                        ]);
+                    } else {
+                        $existingQueryWithStatus->update(['fixed' => $newStatus]);
+                        $existingQueryWithStatus->update(['delegated' => 0]);
+                    }
+                } else {
+                    $newQueryWithStatus = new SearchConsoleQueryStatuses();
+                    $data = [
+                        'site_id' => $newQueryWithStatus->site_id,
+                        'query' => $newQueryWithStatus->query,
+                        'fixed' => $newStatus
+                    ];
+                    $newQueryWithStatus->fill($data);
+                    $newQueryWithStatus->save();
+                }
+    
+                // $query->update([
+                //     'fixed' => $newStatus
+                // ]);
             }
-
-            // $query->update([
-            //     'fixed' => $newStatus
-            // ]);
+            
 
             if ($newStatus == 0) {
                 $messageIdentifier = "fixed";
@@ -316,37 +342,42 @@ class GoogleSearchConsoleController extends Controller
     public function toggleDelegated(SearchConsoleQuery $query)
     {
         if (isset($query)) {
-            $existingQueryWithStatus = SearchConsoleQueryStatuses::where('query', $query->query)->first();
-            if ($existingQueryWithStatus->delegated == 1) {
-                $newStatus = 0;
-            } elseif ($existingQueryWithStatus->delegated == 0) {
-                $newStatus = 1;
-            }
-            //if query exists in queries with statuses we update it
-            if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
-
-                if ($existingQueryWithStatus->delegated == 1 && $existingQueryWithStatus->excluded == 0 && $existingQueryWithStatus->fixed == 0) {
-                    $existingQueryWithStatus->delete();
-                    $query->update([
-                        'query_status_id' => 0
-                    ]);
-                } else {
-                    $existingQueryWithStatus->update(['delegated' => $newStatus]);
+            $existingQueriesWithStatus = SearchConsoleQueryStatuses::where('query', $query->query)->get();
+            $newStatus = 0;
+            foreach($existingQueriesWithStatus as $existingQueryWithStatus){
+                if ($existingQueryWithStatus->delegated == 1) {
+                    $newStatus = 0;
+                } elseif ($existingQueryWithStatus->delegated == 0) {
+                    $newStatus = 1;
                 }
-            } else {
-                $newQueryWithStatus = new SearchConsoleQueryStatuses();
-                $data = [
-                    'site_id' => $newQueryWithStatus->site_id,
-                    'query' => $newQueryWithStatus->query,
-                    'delegated' => $newStatus
-                ];
-                $newQueryWithStatus->fill($data);
-                $newQueryWithStatus->save();
-            }
+                //if query exists in queries with statuses we update it
+                if (isset($existingQueryWithStatus) && !empty($existingQueryWithStatus)) {
+    
+                    if ($existingQueryWithStatus->delegated == 1 && $existingQueryWithStatus->excluded == 0 && $existingQueryWithStatus->fixed == 0) {
+                        $existingQueryWithStatus->delete();
+                        $query->update([
+                            'query_status_id' => 0
+                        ]);
+                    } else {
+                        $existingQueryWithStatus->update(['delegated' => $newStatus]);
+                    }
+                } else {
+                    $newQueryWithStatus = new SearchConsoleQueryStatuses();
+                    $data = [
+                        'site_id' => $newQueryWithStatus->site_id,
+                        'query' => $newQueryWithStatus->query,
+                        'delegated' => $newStatus
+                    ];
+                    $newQueryWithStatus->fill($data);
+                    $newQueryWithStatus->save();
+                }
+    
+                // $query->update([
+                //     'delegated' => $newStatus
+                // ]);
 
-            // $query->update([
-            //     'delegated' => $newStatus
-            // ]);
+            }
+            
 
             if ($newStatus == 0) {
                 $messageIdentifier = "delegated";
@@ -381,9 +412,9 @@ class GoogleSearchConsoleController extends Controller
             //form request
             $request = new SearchAnalyticsQueryRequest();
             $searchConsole = new SearchConsole($client);
-
+            $daysBeforeNow = $query->days_old;
             //form dates for request
-            $dateFrom = now()->subDays(config('gsc-cms.days_before_now'))->format('Y-m-d');
+            $dateFrom = now()->subDays($daysBeforeNow)->format('Y-m-d');
             $dateTo = now()->format('Y-m-d');
             $request->setStartDate($dateFrom);
             $request->setEndDate($dateTo);
@@ -421,6 +452,7 @@ class GoogleSearchConsoleController extends Controller
                             'impressions' => $page->impressions,
                             'ctr' => $page->ctr,
                             'position' => $page->position,
+                            'days_old', $daysBeforeNow,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ];

@@ -13,6 +13,7 @@ class SearchConsoleQueryPage extends Model
         'clicks',
         'impressions',
         'ctr',
-        'position'
+        'position',
+        'days_old'
     ];
 }

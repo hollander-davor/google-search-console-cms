@@ -46,86 +46,94 @@ class GetGoogleSearchConsoleData extends Command
         DB::table('search_console_queries')->truncate();
         DB::table('search_console_query_pages')->truncate();
 
+        $daysBeforeNow = config('gsc-cms.days_before_now');
+        
+
+        foreach($daysBeforeNow as $daysBeforeNowElement){
+            //instantiate google client
+            $client = new Client();
+            //set the path to Oauth credentials
+            // $client->setAuthConfig(public_path('oauth.json'));
+            $client->useApplicationDefaultCredentials();
+            //set the scope
+            $client->setScopes(SearchConsole::WEBMASTERS_READONLY);
+            $searchConsole = new SearchConsole($client);
+            //Check if access token expired
+            if ($client->isAccessTokenExpired()) {
+                // The access token will be automatically fetched
+                $client->fetchAccessTokenWithAssertion();
+            }
+            //----use this part of code to test connection and see available sites
+                // $sites = $searchConsole->sites->listSites();
+                // dd($sites);
+            ///-------------------------------------------------------------------
+
+            //form the request
+            $request = new SearchAnalyticsQueryRequest();
+
+            $dateFrom = now()->subDays($daysBeforeNowElement)->format('Y-m-d');
+            $dateTo = now()->format('Y-m-d');
+
+            $request->setStartDate($dateFrom);
+            $request->setEndDate($dateTo);
+            $request->setDimensions(['query']);
 
 
-        //instantiate google client
-        $client = new Client();
-        //set the path to Oauth credentials
-        // $client->setAuthConfig(public_path('oauth.json'));
-        $client->useApplicationDefaultCredentials();
-        //set the scope
-        $client->setScopes(SearchConsole::WEBMASTERS_READONLY);
-        $searchConsole = new SearchConsole($client);
-        //Check if access token expired
-        if ($client->isAccessTokenExpired()) {
-            // The access token will be automatically fetched
-            $client->fetchAccessTokenWithAssertion();
-        }
-        //----use this part of code to test connection and see available sites
-            // $sites = $searchConsole->sites->listSites();
-            // dd($sites);
-        ///-------------------------------------------------------------------
+            $websites = config('gsc-cms.websites_domains');
+            foreach($websites as $website){
+                //set queries with status
+                $this->setQueriesWithStatuses($website['site_id']);
+                $response = $searchConsole->searchanalytics->query($website['domain'], $request);
+                if($response){
+                    //delete previous queries
+                    //to be done!!!
 
-        //form the request
-        $request = new SearchAnalyticsQueryRequest();
+                    $pattern = '/\b(delo(\.si)?|(ona\s?plus|onaplus(\.si)?)|slovenske?\s*novice(\.si)?|delo(in)?dom(\.si)?|odprta?k?kuhinja(\.si)?|delosi|slovenskene\s*novice|ona\+|oprtakuhinja|odrta\s*kuhinja|(naslovnica|naslovna)|(portal|časopis|revija)|(pdf|epaper)|(prijava|registracija|kontakt)|(oglasi?|oglasnik)|spored|(vreme|horoskop)(\s*danes)?|sudoku|križanka|napovednik|delo\s*(novice|naslovnica|pdf\s*izdaja)|slovenske\s*novice\s*(danes|naslovnica|epaper)|ona\s*plus\s*revija|odprta\s*kuhinja\s*recepti|(današnje|najnovejše|vse|jutranje|popoldanske|dnevne)\s*novice|breaking\s*news|news\s*slovenia|splet(n[iy])?\s*(portal|novice)|online\s*časopis|mali\s*oglasi\s*delo|oglasi\s*slovenske\s*novice|tv\s*spored(\s*(delo|slovenske\s*novice))?)\b/iu';
 
-        $dateFrom = now()->subDays(config('gsc-cms.days_before_now'))->format('Y-m-d');
-        $dateTo = now()->format('Y-m-d');
+                    //enter new queries
+                    foreach($response as $query){
+                        $newQuery = new SearchConsoleQuery();
+                        $data = [
+                            'site_id' => $website['site_id'],
+                            'query_status_id' => $this->checkForQueryStatus($query->keys[0]),
+                            'query' => $query->keys[0],
+                            'clicks' => $query->clicks,
+                            'impressions' => $query->impressions,
+                            'ctr' => $query->ctr,
+                            'position' => $query->position,
+                            'days_old' => $daysBeforeNowElement,
+                            // 'excluded' => $this->checkForQueryStatus($query->keys[0],'excluded'),
+                            // 'fixed' => $this->checkForQueryStatus($query->keys[0],'fixed'),
+                            'critical' => $this->checkIfCritical($query),
+                            'low_hanging_fruit' => $this->checkIfLHF($query),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
 
-        $request->setStartDate($dateFrom);
-        $request->setEndDate($dateTo);
-        $request->setDimensions(['query']);
 
+                        $newQuery->fill($data);
+                        $newQuery->save();
 
-        $websites = config('gsc-cms.websites_domains');
-        foreach($websites as $website){
-            //set queries with status
-            $this->setQueriesWithStatuses($website['site_id']);
-            $response = $searchConsole->searchanalytics->query($website['domain'], $request);
-            if($response){
-                //delete previous queries
-                //to be done!!!
+                        if (preg_match($pattern, $query->keys[0])) {
 
-                $pattern = '/\b(delo(\.si)?|(ona\s?plus|onaplus(\.si)?)|slovenske?\s*novice(\.si)?|delo(in)?dom(\.si)?|odprta?k?kuhinja(\.si)?|delosi|slovenskene\s*novice|ona\+|oprtakuhinja|odrta\s*kuhinja|(naslovnica|naslovna)|(portal|časopis|revija)|(pdf|epaper)|(prijava|registracija|kontakt)|(oglasi?|oglasnik)|spored|(vreme|horoskop)(\s*danes)?|sudoku|križanka|napovednik|delo\s*(novice|naslovnica|pdf\s*izdaja)|slovenske\s*novice\s*(danes|naslovnica|epaper)|ona\s*plus\s*revija|odprta\s*kuhinja\s*recepti|(današnje|najnovejše|vse|jutranje|popoldanske|dnevne)\s*novice|breaking\s*news|news\s*slovenia|splet(n[iy])?\s*(portal|novice)|online\s*časopis|mali\s*oglasi\s*delo|oglasi\s*slovenske\s*novice|tv\s*spored(\s*(delo|slovenske\s*novice))?)\b/iu';
+                            $queryStatus = new SearchConsoleQueryStatuses();
+                            $data['excluded'] = 1;
+                            $queryStatus->fill($data);
+                            $queryStatus->save();
 
-                //enter new queries
-                foreach($response as $query){
-                    $newQuery = new SearchConsoleQuery();
-                    $data = [
-                        'site_id' => $website['site_id'],
-                        'query_status_id' => $this->checkForQueryStatus($query->keys[0]),
-                        'query' => $query->keys[0],
-                        'clicks' => $query->clicks,
-                        'impressions' => $query->impressions,
-                        'ctr' => $query->ctr,
-                        'position' => $query->position,
-                        // 'excluded' => $this->checkForQueryStatus($query->keys[0],'excluded'),
-                        // 'fixed' => $this->checkForQueryStatus($query->keys[0],'fixed'),
-                        'critical' => $this->checkIfCritical($query),
-                        'low_hanging_fruit' => $this->checkIfLHF($query),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
+                            $newQuery->update([
+                                'query_status_id' => $queryStatus->id
+                            ]);
+                        }
 
-                    $newQuery->fill($data);
-                    $newQuery->save();
-
-                    if (preg_match($pattern, $query->keys[0])) {
-
-                        $queryStatus = new SearchConsoleQueryStatuses();
-                        $data['excluded'] = 1;
-                        $queryStatus->fill($data);
-                        $queryStatus->save();
-
-                        $newQuery->update([
-                            'query_status_id' => $queryStatus->id
-                        ]);
                     }
 
                 }
-
             }
+
         }
+        
+        
 
 
     }

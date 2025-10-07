@@ -16,6 +16,7 @@ class SearchConsoleQuery extends Model
         'impressions',
         'ctr',
         'position',
+        'days_old',
         // 'excluded',
         // 'fixed',
         'critical',

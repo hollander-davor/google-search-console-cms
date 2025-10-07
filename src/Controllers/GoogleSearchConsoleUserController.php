@@ -116,8 +116,10 @@ class GoogleSearchConsoleUserController extends Controller
             $request = new SearchAnalyticsQueryRequest();
             $searchConsole = new SearchConsole($client);
 
+            $daysBeforeNow = $query->days_old;
+
             //form dates for request
-            $dateFrom = now()->subDays(config('gsc-cms.days_before_now'))->format('Y-m-d');
+            $dateFrom = now()->subDays($daysBeforeNow)->format('Y-m-d');
             $dateTo = now()->format('Y-m-d');
             $request->setStartDate($dateFrom);
             $request->setEndDate($dateTo);
@@ -155,6 +157,7 @@ class GoogleSearchConsoleUserController extends Controller
                             'impressions' => $page->impressions,
                             'ctr' => $page->ctr,
                             'position' => $page->position,
+                            'days_old' => $daysBeforeNow,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ];

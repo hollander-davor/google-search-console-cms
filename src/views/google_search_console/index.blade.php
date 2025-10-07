@@ -208,6 +208,16 @@
 
                                 </select>
                             </div>
+                            <div class="form-group col-2">
+                                <label
+                                    class="control-label">@lang('Filter ')"{{ config('gsc-cms.days_old_query_text') }}"</label>
+                                <select id="select-days-old" class="form-control" name='days-old'>
+                                    <option selected value="all">@lang('All')</option>
+                                    @foreach($daysOld as $daysOldElement)
+                                        <option value="{{$daysOldElement}}">{{$daysOldElement}}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         <div class="row">
                             <div class="form-group col-3">
@@ -388,6 +398,8 @@
                         dtData["delegatedStatus"] = $('#select-delegated-status').val()
                         dtData["criticalStatus"] = $('#select-critical-status').val()
                         dtData["lhfStatus"] = $('#select-lhf-status').val()
+                        dtData["daysOld"] = $('#select-days-old').val()
+
                     }
                 },
                 "columns": [{
@@ -450,6 +462,11 @@
             });
 
             $('#select-lhf-status').on('change', function(e) {
+                e.preventDefault();
+                ItemsDatatable.ajax.reload(null, true);
+            });
+
+            $('#select-days-old').on('change', function(e) {
                 e.preventDefault();
                 ItemsDatatable.ajax.reload(null, true);
             });

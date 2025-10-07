@@ -13,7 +13,8 @@ return [
         ]
     ],
     //how many days should data be old (default is 7 days, it means that we will get data for last 7 days)
-    'days_before_now' => 7,
+    //uses array as of 07.10.2025.
+    'days_before_now' => [1,3,7],
     //queries with ctr values bellow this value will be in consideration for critical queries(combined with number of impressions)
     'low_ctr_value' => 0.1,
     //queries with impression values above this value will be in consideration for critical queries(combined with ctr)
@@ -48,6 +49,8 @@ return [
     'delayed_query_text' => "Delayed",
     //text to be displayed on "tag" for In progress query (in datatable)
     'in_progress_query_text' => "In progress",
+    //text to be displayed on filter by days old
+    'days_old_query_text' => 'by Days Old',
     //ajax interval in seconds
     "ajax_interval" => 60,
     //statuses for slave queries
