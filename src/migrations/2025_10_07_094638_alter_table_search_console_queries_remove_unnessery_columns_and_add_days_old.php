@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('search_console_queries', function ($table) {
+        Schema::table('search_console_query_pages', function ($table) {
             $table->integer('days_old')->after('position');
         });
     }
@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('search_console_queries', function ($table) {
+        Schema::table('search_console_query_pages', function ($table) {
             $table->dropColumn('days_old');
         });
     }
