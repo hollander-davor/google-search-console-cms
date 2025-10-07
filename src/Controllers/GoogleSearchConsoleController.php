@@ -143,13 +143,8 @@ class GoogleSearchConsoleController extends Controller
                 //if value is 'all', we will all
                 if (isset(request()->daysOld)) {
                     $daysOld = request()->daysOld;
-                    if($daysOld == 1){
-                        $queries->where('days_old', 1);
-                    }elseif($daysOld == 3){
-                        $queries->where('days_old', 3);
-                    }
-                    elseif($daysOld == 7){
-                        $queries->where('days_old', 7);
+                    if($daysOld != 'all'){
+                        $queries->where('days_old', $daysOld );
                     }
                 }
 
