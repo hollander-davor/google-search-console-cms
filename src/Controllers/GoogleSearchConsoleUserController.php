@@ -59,8 +59,6 @@ class GoogleSearchConsoleUserController extends Controller
                 return $admin->first_name . ' ' . $admin->last_name;
             })->editColumn('comment', function ($row) {
                 return $row->queryStatus->master_comment ?? '';
-            })->editColumn('days_old', function ($row) {
-                return $row->days_old;
             });
 
             $datatable->rawColumns(['actions']);

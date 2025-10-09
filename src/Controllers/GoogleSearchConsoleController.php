@@ -63,6 +63,8 @@ class GoogleSearchConsoleController extends Controller
                 }
             })->editColumn('answer', function ($row) {
                 return $row->queryStatus->slave_comment ?? '';
+            })->editColumn('days_old', function ($row) {
+                return $row->days_old;
             })
             ->editColumn('query_statuses', function ($row) {
                 if(!empty($row->queryStatus->slave_status)) {
