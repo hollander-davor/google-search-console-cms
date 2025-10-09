@@ -243,6 +243,7 @@
                             <thead>
                                 <tr>
                                     <th>@lang('Query')</th>
+                                    <th>@lang('Days old')</th>
                                     <th>@lang('Clicks')</th>
                                     <th>@lang('Impressions')</th>
                                     <th>@lang('CTR')</th>
@@ -405,6 +406,10 @@
                 "columns": [{
                         "data": "query",
                         "orderable": false
+                    },
+                    {
+                        "data" : "days_old",
+                        "orderable" : true
                     },
                     {
                         "data": "clicks",
