@@ -13,6 +13,8 @@ use Google\Client;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Hoks\CMSGSC\Models\SearchConsoleTitleSuggestionPackage;
+
 
 class GoogleSearchConsoleUserController extends Controller
 {
@@ -64,7 +66,7 @@ class GoogleSearchConsoleUserController extends Controller
                 $datatable->editColumn('ai_titles', function ($row) {
                     // za ovo je potreban model se special suggestion kao i migracija, ovo je osnovna logika koja je ubacena na delo.si
                     // nadji predloge za dati query
-                    $seoSuggestion = App\Models\SearchConsoleTitleSuggestion::where('query', $row->query)->first();
+                    $seoSuggestion = SearchConsoleTitleSuggestionPackage::where('query', $row->query)->first();
                     // izracunaj broj predloga
                     $suggestionsCount = 0;
                     if ($seoSuggestion && !empty($seoSuggestion->content)) {
