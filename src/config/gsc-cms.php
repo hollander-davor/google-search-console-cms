@@ -59,4 +59,5 @@ return [
     'done_status' => "Done",
     'delayed_status' => "Delayed",
     'in_progress_status' => "In progress",
+    'use_special_actions' => false//da li ce u datatable da se vidi posebna kolona sa kreiranim predlozima naslova za query-je, potrebno je kreirati poseban partial, model i migraciju (vidi Controller gde se ovaj config kljuc koristi)
 ];

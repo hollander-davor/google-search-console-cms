@@ -60,6 +60,23 @@ class GoogleSearchConsoleUserController extends Controller
             })->editColumn('comment', function ($row) {
                 return $row->queryStatus->master_comment ?? '';
             });
+            if(config('gsc-cms.use_special_actions')){
+                $datatable->editColumn('ai_titles', function ($row) {
+                    // za ovo je potreban model se special suggestion kao i migracija, ovo je osnovna logika koja je ubacena na delo.si
+                    // nadji predloge za dati query
+                    $seoSuggestion = App\Models\SearchConsoleTitleSuggestion::where('query', $row->query)->first();
+                    // izracunaj broj predloga
+                    $suggestionsCount = 0;
+                    if ($seoSuggestion && !empty($seoSuggestion->content)) {
+                        $decodedContent = json_decode($seoSuggestion->content, true);
+                        if (is_array($decodedContent)) {
+                            $suggestionsCount = count($decodedContent);
+                        }
+                    }
+                    //ovo je poseban blade koji se koristi za datatable, definisati ga naknadno i ubaciti u resources/views
+                    return view('google_search_console.partials.special_actions', ['query' => $row, 'suggestionsCount' => $suggestionsCount]);
+                });
+            }
 
             $datatable->rawColumns(['actions']);
 
