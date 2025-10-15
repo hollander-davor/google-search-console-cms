@@ -62,7 +62,7 @@ class GoogleSearchConsoleController extends Controller
                     return '';
                 }
             })->editColumn('answer', function ($row) {
-                if(config('gsc-cms.use_special_actions')){
+                if(!config('gsc-cms.use_special_actions')){
                     return $row->queryStatus->slave_comment ?? '';
                 }else{
                     // za ovo je potreban model se special suggestion kao i migracija, ovo je osnovna logika koja je ubacena na delo.si
